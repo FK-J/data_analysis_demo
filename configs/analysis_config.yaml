@@ -1,0 +1,21 @@
+project:
+  name: data_analysis_project
+  timezone: Asia/Shanghai
+  random_seed: 42
+
+analysis:
+  start_date: null
+  end_date: null
+  database_profile: local_mysql
+  readonly_sql: true
+
+paths:
+  data_raw: data/raw
+  data_interim: data/interim
+  data_processed: data/processed
+  reports_figures: reports/figures
+  reports_tables: reports/tables
+  reports_final: reports/final
+  sql_extract: sql/extract
+  sql_transform: sql/transform
+  sql_validation: sql/validation

@@ -1,0 +1,15 @@
+jupyter
+ipykernel
+pandas
+numpy
+SQLAlchemy
+PyMySQL
+PyYAML
+python-dotenv
+matplotlib
+seaborn
+scipy
+statsmodels
+scikit-learn
+openpyxl
+pytest
