@@ -1,12 +1,20 @@
-# MySQL 数据库连接配置示例。
+# 数据库连接配置示例。
 # 使用方式：
 # 1. 复制本文件为 configs/database.yaml
 # 2. 修改 profiles 下的连接信息
 # 3. 不要提交 configs/database.yaml
 
-default_profile: local_mysql
+default_profile: local_sqlite
 
 profiles:
+  # 适合模板演示、小型本地分析和无需外部数据库的项目。
+  local_sqlite:
+    dialect: sqlite
+    database: data/external/example.db
+    echo: false
+    readonly: true
+
+  # 适合连接 MySQL 数据库的项目。
   local_mysql:
     dialect: mysql
     driver: pymysql
@@ -25,6 +33,12 @@ profiles:
     readonly: true
 
   # 后续不同分析项目可以新增 profile，而不需要修改 Python 连接代码。
+  # example_project_sqlite:
+  #   dialect: sqlite
+  #   database: data/external/project.db
+  #   echo: false
+  #   readonly: true
+  #
   # example_project_mysql:
   #   dialect: mysql
   #   driver: pymysql

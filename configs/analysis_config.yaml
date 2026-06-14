@@ -6,7 +6,7 @@ project:
 analysis:
   start_date: null
   end_date: null
-  database_profile: local_mysql
+  database_profile: local_sqlite
   readonly_sql: true
 
 paths:
