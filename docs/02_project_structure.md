@@ -9,6 +9,10 @@ project/
   agent.md
   README.md
   .env.example
+  docs/
+    analysis_framework.md
+    analysis_framework_template.md
+    final_analysis_report_template.md
   configs/
     database.example.yaml
     analysis_config.yaml
@@ -49,7 +53,10 @@ project/
 ## 2. 目录职责
 
 - `agent.md`：项目规范入口和文档目录。
-- `docs/`：细节规范文档。
+- `docs/`：细节规范文档、业务分析框架和报告模板。
+- `docs/analysis_framework.md`：具体项目的业务分析框架，正式分析前必须与用户确认。
+- `docs/analysis_framework_template.md`：业务分析框架模板。
+- `docs/final_analysis_report_template.md`：完整数据分析报告模板。
 - `README.md`：项目背景、运行方式、依赖说明和交付物说明。
 - `.env.example`：环境变量示例，禁止包含真实账号、密码、密钥。
 - `configs/`：配置文件目录，包括数据库连接示例、分析参数、日期范围等。
@@ -64,7 +71,7 @@ project/
 - `notebooks/main_analysis.ipynb`：唯一主分析 Notebook，必须完整执行全流程。
 - `reports/figures/`：图表文件。
 - `reports/tables/`：结果表文件。
-- `reports/final/`：最终报告或交付材料。
+- `reports/final/`：完整数据分析报告和最终交付材料。
 - `tests/`：关键函数、指标逻辑或数据校验测试。
 - `logs/`：运行日志。
 
@@ -134,13 +141,14 @@ fig_01_metric_trend.png
 fig_02_segment_comparison.png
 fig_03_model_performance.png
 final_report.md
+final_analysis_report.md
 ```
 
 命名原则：
 
 - 结果表使用清晰业务名称。
 - 图表建议使用 `fig_序号_主题.png`。
-- 最终报告统一保存到 `reports/final/`。
+- 最终完整数据分析报告建议命名为 `final_analysis_report.md`，统一保存到 `reports/final/`。
 
 ## 5. README 要求
 
@@ -149,6 +157,7 @@ final_report.md
 - 项目名称。
 - 项目背景。
 - 业务问题。
+- 业务分析框架文档位置。
 - 目录结构说明。
 - 环境依赖。
 - 数据来源说明。
@@ -156,6 +165,12 @@ final_report.md
 - 如何运行 `notebooks/main_analysis.ipynb`。
 - 输出文件位置。
 - 注意事项。
+
+具体项目的业务分析框架必须保存为：
+
+```text
+docs/analysis_framework.md
+```
 
 ## 6. 配置文件要求
 
@@ -209,6 +224,8 @@ logs/
 project/
   agent.md
   README.md
+  docs/
+    analysis_framework.md
   data/
   sql/
   src/

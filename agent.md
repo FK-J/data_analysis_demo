@@ -8,16 +8,20 @@
 
 默认执行原则：
 
+- 在正式读取数据、编写 SQL、建模或制图之前，必须先与用户确认业务分析框架。
+- 业务分析框架必须保存为 `docs/analysis_framework.md`，可基于 `docs/analysis_framework_template.md` 创建。
+- 后续用户提出新的分析需求时，必须先判断并同步更新 `docs/analysis_framework.md`，再修改 Notebook、SQL、Python 或报告。
 - 必须使用 `notebooks/main_analysis.ipynb` 作为唯一主分析入口。
 - 可以使用 Python 脚本封装复杂逻辑，但必须由主 Notebook 调用。
 - 可以使用 SQL 文件沉淀抽取、转换和校验逻辑，但必须由 Python 在主 Notebook 中执行。
 - 可以通过 Python 直接连接数据库，但禁止硬编码真实账号、密码、密钥或生产库敏感配置。
 - Notebook 每个主要步骤必须写清楚目的、输入、处理逻辑、输出和注意事项。
 - 所有关键结论必须可以追溯到数据、SQL、Python 脚本或 Notebook cell。
+- 最终交付必须是围绕业务分析框架组织的完整数据分析报告，而不是图表和结果的简单呈现。
 
 核心目标：
 
-> 每个项目必须通过 `notebooks/main_analysis.ipynb` 从上到下完整复现，包括数据库连接、SQL 执行、数据加载、数据质量检查、清洗转换、探索分析、业务分析、统计分析、机器学习建模、结果验证、图表导出、最终结论与局限性说明。
+> 每个项目必须先形成 `docs/analysis_framework.md`，再通过 `notebooks/main_analysis.ipynb` 从上到下完整复现，包括数据库连接、SQL 执行、数据加载、数据质量检查、清洗转换、探索分析、业务分析、统计分析、机器学习建模、结果验证、图表导出和完整数据分析报告输出。
 
 ## 2. 规范文档目录
 
@@ -31,6 +35,8 @@
 | [06_analysis_modeling_standard.md](docs/06_analysis_modeling_standard.md) | 探索性分析、业务分析、统计分析、机器学习建模规范 | 涉及分析或建模时必读 |
 | [07_visualization_reporting_delivery.md](docs/07_visualization_reporting_delivery.md) | 可视化、报告、结论表达、最终交付规范 | 所有交付型项目必读 |
 | [08_reproducibility_audit_checklists.md](docs/08_reproducibility_audit_checklists.md) | 复现、日志、测试、审计、完成检查清单、禁止事项 | 项目完成前必读 |
+| [analysis_framework_template.md](docs/analysis_framework_template.md) | 业务分析框架模板，先确认业务拆解、分析路径和分析边界 | 新项目启动时必用 |
+| [final_analysis_report_template.md](docs/final_analysis_report_template.md) | 完整数据分析报告模板 | 输出最终报告时使用 |
 
 ## 3. 推荐阅读顺序
 
@@ -40,6 +46,7 @@
 agent.md
 → docs/01_overview_and_principles.md
 → docs/02_project_structure.md
+→ docs/analysis_framework_template.md
 → docs/03_main_notebook_standard.md
 → docs/04_python_sql_database_standard.md
 → docs/05_data_management_quality_cleaning.md
@@ -59,6 +66,8 @@ project/
   agent.md
   README.md
   .env.example
+  docs/
+    analysis_framework.md
   configs/
   data/
   sql/
@@ -77,6 +86,7 @@ project/
 即使是小型数据分析项目，也必须满足以下最低要求：
 
 - 有清晰的业务问题和分析目标。
+- 有已确认的 `docs/analysis_framework.md`。
 - 有 `notebooks/main_analysis.ipynb`。
 - 主 Notebook 可以从上到下顺序执行。
 - 主 Notebook 每个主要步骤都有 Markdown 备注。
@@ -85,7 +95,7 @@ project/
 - SQL 文件保存在 `sql/`，并由主 Notebook 通过 Python 执行。
 - 复杂 Python 逻辑保存在 `src/`，并由主 Notebook 调用。
 - 关键图表和结果表已导出到 `reports/`。
-- 最终结论包含事实、推断、建议和局限性。
+- 最终报告围绕业务分析框架组织，并包含事实、推断、建议和局限性。
 - 不包含真实数据库密码、密钥、token 或敏感明细数据。
 
 完整检查清单见：[08_reproducibility_audit_checklists.md](docs/08_reproducibility_audit_checklists.md)。
@@ -95,6 +105,7 @@ project/
 后续 Agent 在项目中必须保持以下工作方式：
 
 - 先明确问题，再读取和处理数据。
+- 先和用户讨论业务分析框架，再进入具体取数、分析和建模。
 - 先建立可复现流程，再优化分析细节。
 - 先完成数据质量检查，再输出业务结论。
 - 先判断是否需要统计分析或机器学习，再选择方法。

@@ -9,7 +9,19 @@
 - 核心问题：
 - 预期交付物：
 
-## 2. 数据来源
+## 2. 业务分析框架
+
+本项目的业务分析框架文档位于：
+
+```text
+docs/analysis_framework.md
+```
+
+正式取数、清洗、建模和制图前，必须先确认该文档。
+
+如用户提出新的分析需求，应先更新 `docs/analysis_framework.md`，再同步 Notebook、SQL、Python 和报告。
+
+## 3. 数据来源
 
 | 数据源 | 说明 | 时间范围 | 粒度 | 负责人 |
 | --- | --- | --- | --- | --- |
@@ -17,13 +29,13 @@
 
 如使用数据库，请说明 profile 名称，不要写真实账号、密码或 host。
 
-## 3. 核心指标口径
+## 4. 核心指标口径
 
 | 指标 | 口径 | 粒度 | 备注 |
 | --- | --- | --- | --- |
 | 待填写 | 待填写 | 待填写 | 待填写 |
 
-## 4. 项目结构
+## 5. 项目结构
 
 ```text
 configs/      项目配置
@@ -36,7 +48,7 @@ tests/        测试与校验
 logs/         运行日志
 ```
 
-## 5. 环境准备
+## 6. 环境准备
 
 ```bash
 python -m venv .venv
@@ -44,7 +56,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## 6. 配置说明
+## 7. 配置说明
 
 如需数据库连接：
 
@@ -60,7 +72,7 @@ pip install -r requirements.txt
 configs/analysis_config.yaml
 ```
 
-## 7. 运行方式
+## 8. 运行方式
 
 打开并从上到下运行：
 
@@ -68,7 +80,7 @@ configs/analysis_config.yaml
 notebooks/main_analysis.ipynb
 ```
 
-## 8. 输出文件
+## 9. 输出文件
 
 | 输出文件 | 说明 |
 | --- | --- |
@@ -76,7 +88,15 @@ notebooks/main_analysis.ipynb
 | reports/tables/ | 结果表 |
 | reports/final/ | 最终报告或交付材料 |
 
-## 9. 结论摘要
+最终完整数据分析报告建议保存为：
+
+```text
+reports/final/final_analysis_report.md
+```
+
+报告应围绕 `docs/analysis_framework.md` 中确认的业务问题组织。
+
+## 10. 结论摘要
 
 ### 事实
 
@@ -94,8 +114,9 @@ notebooks/main_analysis.ipynb
 
 - 待填写
 
-## 10. 注意事项
+## 11. 注意事项
 
+- 分析必须基于已确认的业务分析框架。
 - 不提交真实数据库凭据。
 - 不提交未脱敏敏感数据。
 - Notebook 应可从上到下完整复现。
