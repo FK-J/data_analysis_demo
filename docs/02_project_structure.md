@@ -12,7 +12,9 @@ project/
   docs/
     analysis_framework.md
     analysis_framework_template.md
+    final_report_structure_template.md
     final_analysis_report_template.md
+    report_inputs_template.yaml
   configs/
     database.example.yaml
     analysis_config.yaml
@@ -40,6 +42,8 @@ project/
     reporting/
   notebooks/
     main_analysis.ipynb
+  scripts/
+    generate_final_report.py
   reports/
     figures/
     tables/
@@ -56,7 +60,9 @@ project/
 - `docs/`：细节规范文档、业务分析框架和报告模板。
 - `docs/analysis_framework.md`：具体项目的业务分析框架，正式分析前必须与用户确认。
 - `docs/analysis_framework_template.md`：业务分析框架模板。
-- `docs/final_analysis_report_template.md`：完整数据分析报告模板。
+- `docs/final_report_structure_template.md`：最终报告结构模板。
+- `docs/final_analysis_report_template.md`：结果呈现型报告结构说明。
+- `docs/report_inputs_template.yaml`：报告生成脚本输入模板。
 - `README.md`：项目背景、运行方式、依赖说明和交付物说明。
 - `.env.example`：环境变量示例，禁止包含真实账号、密码、密钥。
 - `configs/`：配置文件目录，包括数据库连接示例、分析参数、日期范围等。
@@ -69,9 +75,10 @@ project/
 - `sql/validation/`：数据校验 SQL。
 - `src/`：可复用 Python 脚本。
 - `notebooks/main_analysis.ipynb`：唯一主分析 Notebook，必须完整执行全流程。
+- `scripts/generate_final_report.py`：固定生成最终报告的脚本，默认只呈现结果。
 - `reports/figures/`：图表文件。
 - `reports/tables/`：结果表文件。
-- `reports/final/`：完整数据分析报告和最终交付材料。
+- `reports/final/`：最终报告结构、报告输入素材、最终报告和交付材料。
 - `tests/`：关键函数、指标逻辑或数据校验测试。
 - `logs/`：运行日志。
 
@@ -140,15 +147,18 @@ model_performance_summary.csv
 fig_01_metric_trend.png
 fig_02_segment_comparison.png
 fig_03_model_performance.png
-final_report.md
 final_analysis_report.md
+final_report_structure.md
+report_inputs.yaml
 ```
 
 命名原则：
 
 - 结果表使用清晰业务名称。
 - 图表建议使用 `fig_序号_主题.png`。
-- 最终完整数据分析报告建议命名为 `final_analysis_report.md`，统一保存到 `reports/final/`。
+- 最终报告结构建议命名为 `final_report_structure.md`，统一保存到 `reports/final/`。
+- 报告生成输入建议命名为 `report_inputs.yaml`，统一保存到 `reports/final/`。
+- 最终报告建议命名为 `final_analysis_report.md`，由 `scripts/generate_final_report.py` 生成并保存到 `reports/final/`。
 
 ## 5. README 要求
 
@@ -158,11 +168,13 @@ final_analysis_report.md
 - 项目背景。
 - 业务问题。
 - 业务分析框架文档位置。
+- 最终报告结构文件位置。
 - 目录结构说明。
 - 环境依赖。
 - 数据来源说明。
 - 数据库连接配置方式。
 - 如何运行 `notebooks/main_analysis.ipynb`。
+- 如何运行 `scripts/generate_final_report.py`。
 - 输出文件位置。
 - 注意事项。
 
@@ -171,6 +183,14 @@ final_analysis_report.md
 ```text
 docs/analysis_framework.md
 ```
+
+具体项目的最终报告结构必须保存为：
+
+```text
+reports/final/final_report_structure.md
+```
+
+`reports/final/report_inputs.yaml` 是报告生成输入素材，默认可不提交到 Git。
 
 ## 6. 配置文件要求
 
@@ -200,6 +220,7 @@ docs/analysis_framework.md
 - 敏感明细数据。
 - 临时缓存文件。
 - 无关 Notebook 检查点。
+- 包含敏感结果或明细的 `reports/final/report_inputs.yaml`。
 
 建议 `.gitignore` 包含：
 
@@ -212,6 +233,13 @@ data/raw/
 data/interim/
 data/processed/
 logs/
+```
+
+如果项目需要提交最终报告结构和最终报告，可以在 `.gitignore` 中保留：
+
+```text
+!reports/final/final_report_structure.md
+!reports/final/final_analysis_report.md
 ```
 
 如果项目需要保留小型示例数据，必须确认数据已脱敏。

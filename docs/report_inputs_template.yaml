@@ -1,0 +1,59 @@
+# 复制本文件为 reports/final/report_inputs.yaml，并填入 Notebook/脚本导出的结果素材。
+# scripts/generate_final_report.py 默认只呈现本文件中的结果，不自动生成洞察或业务解读。
+
+project:
+  name: 数据分析项目
+  report_title: 数据分析报告
+  analysis_framework_path: docs/analysis_framework.md
+  report_structure_path: reports/final/final_report_structure.md
+  notebook_path: notebooks/main_analysis.ipynb
+
+summary:
+  section_goal: 汇总本次分析最重要的结果。
+  key_results:
+    - 待填写核心结果一。
+    - 待填写核心结果二。
+  metrics:
+    - name: 待填写指标
+      value: 待填写结果
+      note: 待填写口径说明
+  figures:
+    - title: 待填写图表标题
+      path: reports/figures/example.png
+      note: 待填写图表说明
+  tables:
+    - title: 待填写表格标题
+      path: reports/tables/example.csv
+      note: 待填写表格说明
+
+business_questions:
+  - id: Q1
+    title: 待填写业务问题一
+    section_goal: 待填写本节目标
+    analysis_logic: 待填写本节具体分析逻辑
+    key_results:
+      - 待填写关键结果
+    figures:
+      - title: 待填写图表标题
+        path: reports/figures/q1_example.png
+        note: 待填写图表说明
+    tables:
+      - title: 待填写表格标题
+        path: reports/tables/q1_example.csv
+        note: 待填写表格说明
+    notes:
+      - 待填写口径、限制或补充说明
+
+appendix:
+  data_scope:
+    - 待填写数据范围
+  metric_definitions:
+    - 待填写指标口径
+  output_files:
+    - reports/final/final_analysis_report.md
+
+insights:
+  # 默认不渲染。只有运行脚本时显式传入 --with-insights 才会写入报告。
+  enabled: false
+  items:
+    - 待填写可选洞察内容。脚本不会自动调用大模型生成本内容。

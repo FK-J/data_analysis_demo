@@ -47,6 +47,14 @@ docs/analysis_framework.md
 
 如果用户提出新的分析需求，必须先判断是否影响 `docs/analysis_framework.md`。如果影响，必须先更新该文档，再同步修改 Notebook、SQL、Python 和报告。
 
+在进入具体分析前，还应基于业务分析框架确认最终报告呈现结构，并保存到：
+
+```text
+reports/final/final_report_structure.md
+```
+
+该文件用于说明报告汇总结果、各业务问题章节、每节分析逻辑和预期呈现的图表/表格。
+
 ### 4.2 可复现优先
 
 项目中的关键结论必须能够被复现。
@@ -57,6 +65,7 @@ docs/analysis_framework.md
 - Notebook 不依赖未记录的手动操作。
 - 所有核心数据处理逻辑可以追溯到 SQL 文件、Python 脚本或 Notebook cell。
 - 所有最终图表、结果表和报告文件均落地保存到 `reports/` 目录。
+- 最终报告由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 生成。
 
 ### 4.3 口径明确
 
@@ -108,6 +117,7 @@ docs/analysis_framework.md
 
 - 用户的问题和目标。
 - 业务背景、决策目标和业务拆解框架。
+- 最终报告呈现结构。
 - 数据来源和可访问方式。
 - 是否需要连接数据库。
 - 是否需要执行 SQL。
@@ -157,20 +167,21 @@ docs/analysis_framework.md
 1. 明确业务问题和交付目标
 2. 与用户确认业务分析框架
 3. 创建或更新 docs/analysis_framework.md
-4. 建立项目目录
-5. 创建 README.md、.env.example 和配置文件
-6. 编写数据库连接和 SQL 执行模块
-7. 编写 SQL 抽取与校验脚本
-8. 创建 notebooks/main_analysis.ipynb
-9. 在 Notebook 中连接数据库并执行 SQL
-10. 完成数据质量检查
-11. 完成数据清洗和转换
-12. 完成探索性分析
-13. 完成业务分析
-14. 根据需要完成统计分析
-15. 根据需要完成机器学习建模
-16. 验证结果稳定性
-17. 导出图表、表格和报告素材
-18. 编写完整数据分析报告
-19. 根据检查清单完成交付前检查
+4. 创建或更新 reports/final/final_report_structure.md
+5. 建立项目目录
+6. 创建 README.md、.env.example 和配置文件
+7. 编写数据库连接和 SQL 执行模块
+8. 编写 SQL 抽取与校验脚本
+9. 创建 notebooks/main_analysis.ipynb
+10. 在 Notebook 中连接数据库并执行 SQL
+11. 完成数据质量检查
+12. 完成数据清洗和转换
+13. 完成探索性分析
+14. 完成业务分析
+15. 根据需要完成统计分析
+16. 根据需要完成机器学习建模
+17. 验证结果稳定性
+18. 导出图表、表格和 report_inputs.yaml
+19. 运行 scripts/generate_final_report.py 生成最终报告
+20. 根据检查清单完成交付前检查
 ```

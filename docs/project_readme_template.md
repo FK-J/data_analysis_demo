@@ -21,7 +21,29 @@ docs/analysis_framework.md
 
 如用户提出新的分析需求，应先更新 `docs/analysis_framework.md`，再同步 Notebook、SQL、Python 和报告。
 
-## 3. 数据来源
+## 3. 最终报告结构
+
+本项目的最终报告结构位于：
+
+```text
+reports/final/final_report_structure.md
+```
+
+正式分析前，应先确认该文件，明确汇总结果和每个业务问题章节的呈现内容、分析逻辑、图表和表格清单。
+
+最终报告由脚本生成：
+
+```bash
+python scripts/generate_final_report.py
+```
+
+默认不生成大模型洞察或业务解读。若需要渲染已准备好的洞察内容，应显式运行：
+
+```bash
+python scripts/generate_final_report.py --with-insights
+```
+
+## 4. 数据来源
 
 | 数据源 | 说明 | 时间范围 | 粒度 | 负责人 |
 | --- | --- | --- | --- | --- |
@@ -29,13 +51,13 @@ docs/analysis_framework.md
 
 如使用数据库，请说明 profile 名称，不要写真实账号、密码或 host。
 
-## 4. 核心指标口径
+## 5. 核心指标口径
 
 | 指标 | 口径 | 粒度 | 备注 |
 | --- | --- | --- | --- |
 | 待填写 | 待填写 | 待填写 | 待填写 |
 
-## 5. 项目结构
+## 6. 项目结构
 
 ```text
 configs/      项目配置
@@ -44,11 +66,12 @@ sql/          SQL 文件
 src/          Python 可复用逻辑
 notebooks/    主分析 Notebook
 reports/      图表、结果表和最终报告
+scripts/      报告生成脚本
 tests/        测试与校验
 logs/         运行日志
 ```
 
-## 6. 环境准备
+## 7. 环境准备
 
 ```bash
 python -m venv .venv
@@ -56,7 +79,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## 7. 配置说明
+## 8. 配置说明
 
 如需数据库连接：
 
@@ -72,7 +95,7 @@ pip install -r requirements.txt
 configs/analysis_config.yaml
 ```
 
-## 8. 运行方式
+## 9. 运行方式
 
 打开并从上到下运行：
 
@@ -80,7 +103,13 @@ configs/analysis_config.yaml
 notebooks/main_analysis.ipynb
 ```
 
-## 9. 输出文件
+然后生成最终报告：
+
+```bash
+python scripts/generate_final_report.py
+```
+
+## 10. 输出文件
 
 | 输出文件 | 说明 |
 | --- | --- |
@@ -88,25 +117,31 @@ notebooks/main_analysis.ipynb
 | reports/tables/ | 结果表 |
 | reports/final/ | 最终报告或交付材料 |
 
-最终完整数据分析报告建议保存为：
+报告输入素材：
+
+```text
+reports/final/report_inputs.yaml
+```
+
+最终报告：
 
 ```text
 reports/final/final_analysis_report.md
 ```
 
-报告应围绕 `docs/analysis_framework.md` 中确认的业务问题组织。
+报告应基于 `reports/final/final_report_structure.md` 和 `reports/final/report_inputs.yaml` 生成。
 
-## 10. 结论摘要
+## 11. 结果摘要
 
 ### 事实
 
 - 待填写
 
-### 推断
+### 推断，如适用
 
 - 待填写
 
-### 建议
+### 建议，如用户明确要求
 
 - 待填写
 
@@ -114,9 +149,11 @@ reports/final/final_analysis_report.md
 
 - 待填写
 
-## 11. 注意事项
+## 12. 注意事项
 
 - 分析必须基于已确认的业务分析框架。
+- 最终报告结构必须在正式分析前确认。
+- 最终报告默认只呈现结果，不自动生成大模型洞察或业务解读。
 - 不提交真实数据库凭据。
 - 不提交未脱敏敏感数据。
 - Notebook 应可从上到下完整复现。
