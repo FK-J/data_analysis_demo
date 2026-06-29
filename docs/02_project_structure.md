@@ -15,6 +15,7 @@ project/
     final_report_structure_template.md
     final_analysis_report_template.md
     report_inputs_template.yaml
+    script_catalog.md
   configs/
     database.example.yaml
     analysis_config.yaml
@@ -63,6 +64,7 @@ project/
 - `docs/final_report_structure_template.md`：最终报告结构模板。
 - `docs/final_analysis_report_template.md`：结果呈现型报告结构说明。
 - `docs/report_inputs_template.yaml`：报告生成脚本输入模板。
+- `docs/script_catalog.md`：可直接执行脚本的功能、输入、输出、命令示例和安全注意事项。
 - `README.md`：项目背景、运行方式、依赖说明和交付物说明。
 - `.env.example`：环境变量示例，禁止包含真实账号、密码、密钥。
 - `configs/`：配置文件目录，包括数据库连接示例、分析参数、日期范围等。
@@ -76,6 +78,7 @@ project/
 - `src/`：可复用 Python 脚本。
 - `notebooks/main_analysis.ipynb`：唯一主分析 Notebook，必须完整执行全流程。
 - `scripts/generate_final_report.py`：固定生成最终报告的脚本，默认只呈现结果。
+- `scripts/`：可直接执行的功能脚本目录。新增、删除、重命名或修改脚本时，必须同步更新 `docs/script_catalog.md`。
 - `reports/figures/`：图表文件。
 - `reports/tables/`：结果表文件。
 - `reports/final/`：最终报告结构、报告输入素材、最终报告和交付材料。
@@ -175,6 +178,7 @@ report_inputs.yaml
 - 数据库连接配置方式。
 - 如何运行 `notebooks/main_analysis.ipynb`。
 - 如何运行 `scripts/generate_final_report.py`。
+- 脚本功能目录 `docs/script_catalog.md` 的位置和维护要求。
 - 输出文件位置。
 - 注意事项。
 

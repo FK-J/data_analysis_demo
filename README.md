@@ -10,6 +10,7 @@
 - `configs/` 管理项目参数和数据源配置。
 - `sql/` 保存可复用 SQL。
 - `src/` 保存可复用 Python 逻辑。
+- `docs/script_catalog.md` 记录可直接执行脚本的功能、输入、输出和使用规范。
 - `scripts/generate_final_report.py` 固定生成最终报告，默认只呈现结果。
 - `reports/` 保存图表、结果表和最终交付物。
 - `tests/` 保存关键函数、指标逻辑和数据校验测试。
@@ -29,9 +30,10 @@
 8. 在 `configs/analysis_config.yaml` 中设置项目名称、时间范围、随机种子和数据源 profile。
 9. 在 `notebooks/main_analysis.ipynb` 中基于 `docs/analysis_framework.md` 执行数据加载、质量检查、分析和导出。
 10. 将复杂 SQL 放入 `sql/`，复杂 Python 逻辑放入 `src/`。
-11. 将关键结果导出到 `reports/`，并生成 `reports/final/report_inputs.yaml`。
-12. 运行 `scripts/generate_final_report.py` 生成最终报告。
-13. 交付前按 `docs/08_reproducibility_audit_checklists.md` 完成审计。
+11. 如新增、删除或修改可直接执行脚本，同步更新 `docs/script_catalog.md`。
+12. 将关键结果导出到 `reports/`，并生成 `reports/final/report_inputs.yaml`。
+13. 运行 `scripts/generate_final_report.py` 生成最终报告。
+14. 交付前按 `docs/08_reproducibility_audit_checklists.md` 完成审计。
 
 详细模板使用流程见：
 
@@ -158,7 +160,17 @@ docs/final_analysis_report_template.md
 docs/report_inputs_template.yaml
 ```
 
-## 7. 敏感信息规则
+## 7. 脚本功能目录
+
+可直接执行脚本的功能、输入、输出、命令示例和安全注意事项记录在：
+
+```text
+docs/script_catalog.md
+```
+
+需要快速执行某个脚本时，应先查看该文档。新增、删除、重命名或修改 `scripts/` 下的脚本时，必须同步更新 `docs/script_catalog.md`。
+
+## 8. 敏感信息规则
 
 禁止提交：
 
@@ -171,7 +183,7 @@ docs/report_inputs_template.yaml
 
 如果必须保留示例数据，必须确认数据已经脱敏，且体积适合进入 Git。
 
-## 8. 目录说明
+## 9. 目录说明
 
 详细目录职责见：
 

@@ -10,8 +10,9 @@
 4. 复制 `docs/analysis_framework_template.md` 为 `docs/analysis_framework.md`，保存确认后的业务分析框架。
 5. 复制 `docs/final_report_structure_template.md` 为 `reports/final/final_report_structure.md`，确认最终报告结构和每节分析逻辑。
 6. 参考 `docs/project_readme_template.md` 重写新项目 README。
-7. 打开 `notebooks/main_analysis.ipynb`，基于 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md` 填写分析过程。
-8. 删除不适用于当前项目的示例 SQL 或占位说明。
+7. 查看 `docs/script_catalog.md`，确认当前脚本是否适用于新项目。
+8. 打开 `notebooks/main_analysis.ipynb`，基于 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md` 填写分析过程。
+9. 删除不适用于当前项目的示例 SQL 或占位说明；如新增、删除或修改 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
 
 ## 2. 确认业务分析框架
 
@@ -96,7 +97,24 @@ Notebook 必须基于 `docs/analysis_framework.md` 和 `reports/final/final_repo
 
 Notebook 负责串联流程、展示关键结果和记录业务解释。
 
-## 6. 输出交付物
+## 6. 维护脚本功能目录
+
+可直接执行脚本的功能和使用方式统一记录在：
+
+```text
+docs/script_catalog.md
+```
+
+分析过程中，如果需要快速执行某个脚本，应先查看该文档，确认脚本的输入、输出、是否会写文件以及安全注意事项。
+
+如发生以下任一情况，必须同步更新 `docs/script_catalog.md`：
+
+- 新增 `scripts/` 下的可执行脚本。
+- 删除或重命名 `scripts/` 下的脚本。
+- 修改脚本参数、默认输入、默认输出、写文件行为或安全边界。
+- 将原本只能由 Notebook 调用的逻辑改为可单独执行脚本。
+
+## 7. 输出交付物
 
 推荐输出路径：
 
@@ -147,7 +165,7 @@ reports/final/final_analysis_report.md
 python scripts/generate_final_report.py --with-insights
 ```
 
-## 7. 提交前检查
+## 8. 提交前检查
 
 提交前至少确认：
 
@@ -157,6 +175,7 @@ python scripts/generate_final_report.py --with-insights
 - `notebooks/main_analysis.ipynb` 可以从上到下顺序运行。
 - 关键 SQL 已保存到 `sql/`。
 - 复杂 Python 逻辑已保存到 `src/`。
+- 如新增、删除或修改可执行脚本，`docs/script_catalog.md` 已同步更新。
 - 关键图表和结果表已导出到 `reports/`。
 - `reports/final/report_inputs.yaml` 已生成。
 - 已通过 `scripts/generate_final_report.py` 生成最终报告。

@@ -15,6 +15,7 @@
 - 数据来源说明。
 - 数据库连接配置方式。
 - 如何运行 `notebooks/main_analysis.ipynb`。
+- 脚本功能目录 `docs/script_catalog.md` 的位置和维护要求。
 - 输出文件位置。
 - 注意事项。
 
@@ -101,6 +102,8 @@ logs/
 - [ ] SQL 文件已保存到 `sql/`。
 - [ ] SQL 文件包含头部说明。
 - [ ] Notebook 已调用 SQL 文件，而非只手动复制结果。
+- [ ] 可直接执行脚本已记录在 `docs/script_catalog.md`。
+- [ ] 新增、删除、重命名或修改脚本后，`docs/script_catalog.md` 已同步更新。
 - [ ] 数据质量检查已完成。
 - [ ] 缺失值、重复值、异常值处理方式已说明。
 - [ ] 清洗前后数据量变化已记录。
@@ -138,6 +141,7 @@ logs/
 - 数据质量检查已完成。
 - SQL 文件保存在 `sql/`，并由 Notebook 通过 Python 执行。
 - 复杂 Python 逻辑保存在 `src/`，并由 Notebook 调用。
+- 可直接执行脚本已记录在 `docs/script_catalog.md`，且脚本变更已同步更新该文档。
 - 关键图表和结果表已导出到 `reports/`。
 - `reports/final/report_inputs.yaml` 已生成。
 - 最终报告由 `scripts/generate_final_report.py` 生成。
@@ -158,6 +162,7 @@ logs/
 - 把相关性直接表述为因果性。
 - 使用无法复现的手动步骤。
 - 只在脚本中完成分析，主 Notebook 无法复现。
+- 新增、删除、重命名或修改可执行脚本后，未同步更新 `docs/script_catalog.md`。
 - Notebook 中缺少步骤说明和备注。
 - 在代码、Notebook、日志或配置中硬编码真实数据库密码。
 - 提交真实 `.env` 文件。
@@ -180,13 +185,14 @@ logs/
 5. 检查是否有报错
 6. 检查 SQL 文件是否存在且有头部说明
 7. 检查 Python 脚本是否由 Notebook 调用
-8. 检查数据质量结果是否展示
-9. 检查图表和结果表是否落地
-10. 检查 reports/final/report_inputs.yaml 是否生成
-11. 运行 scripts/generate_final_report.py
-12. 检查最终报告是否保存
-13. 检查是否默认未生成大模型洞察
-14. 检查是否泄露敏感信息
+8. 检查 docs/script_catalog.md 是否覆盖可直接执行脚本，并与 scripts/ 目录一致
+9. 检查数据质量结果是否展示
+10. 检查图表和结果表是否落地
+11. 检查 reports/final/report_inputs.yaml 是否生成
+12. 运行 scripts/generate_final_report.py
+13. 检查最终报告是否保存
+14. 检查是否默认未生成大模型洞察
+15. 检查是否泄露敏感信息
 ```
 
 ## 8. 审计结果记录
@@ -202,6 +208,7 @@ logs/
 - Notebook 顺序执行状态：
 - 数据质量检查状态：
 - SQL 文件检查状态：
+- 脚本功能目录检查状态：
 - 输出文件检查状态：
 - 报告输入素材状态：
 - 脚本生成最终报告状态：

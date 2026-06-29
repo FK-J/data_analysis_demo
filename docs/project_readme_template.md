@@ -109,6 +109,14 @@ notebooks/main_analysis.ipynb
 python scripts/generate_final_report.py
 ```
 
+可直接执行脚本的功能、输入、输出和注意事项见：
+
+```text
+docs/script_catalog.md
+```
+
+新增、删除、重命名或修改 `scripts/` 下的脚本时，必须同步更新该文档。
+
 ## 10. 输出文件
 
 | 输出文件 | 说明 |
