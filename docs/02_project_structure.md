@@ -11,6 +11,7 @@ project/
   .env.example
   docs/
     analysis_framework.md
+    framework_issue_log.md
     analysis_framework_template.md
     final_report_structure_template.md
     final_analysis_report_template.md
@@ -60,6 +61,7 @@ project/
 - `agent.md`：项目规范入口和文档目录。
 - `docs/`：细节规范文档、业务分析框架和报告模板。
 - `docs/analysis_framework.md`：具体项目的业务分析框架，正式分析前必须与用户确认。
+- `docs/framework_issue_log.md`：记录使用过程中的问题、用户反馈、临时处理方式和框架迭代建议。
 - `docs/analysis_framework_template.md`：业务分析框架模板。
 - `docs/final_report_structure_template.md`：最终报告结构模板。
 - `docs/final_analysis_report_template.md`：结果呈现型报告结构说明。
@@ -171,6 +173,7 @@ report_inputs.yaml
 - 项目背景。
 - 业务问题。
 - 业务分析框架文档位置。
+- 框架使用问题记录文档位置。
 - 最终报告结构文件位置。
 - 目录结构说明。
 - 环境依赖。
@@ -258,6 +261,7 @@ project/
   README.md
   docs/
     analysis_framework.md
+    framework_issue_log.md
   data/
   sql/
   src/

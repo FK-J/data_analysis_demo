@@ -12,6 +12,7 @@
 - 业务分析框架必须保存为 `docs/analysis_framework.md`，可基于 `docs/analysis_framework_template.md` 创建。
 - 在分析执行前，应同步确认最终报告呈现结构，并保存为 `reports/final/final_report_structure.md`。
 - 后续用户提出新的分析需求时，必须先判断并同步更新 `docs/analysis_framework.md`，再修改 Notebook、SQL、Python 或报告。
+- 使用过程中只要出现不满足用户需求、需要用户指导修改、流程不清楚、文档不足或其他影响交付效率的问题，必须记录到 `docs/framework_issue_log.md`，并判断是否属于框架通用问题。
 - 必须使用 `notebooks/main_analysis.ipynb` 作为唯一主分析入口。
 - 可以使用 Python 脚本封装复杂逻辑，但必须由主 Notebook 调用。
 - 可以使用 SQL 文件沉淀抽取、转换和校验逻辑，但必须由 Python 在主 Notebook 中执行。
@@ -34,7 +35,8 @@
 | --- | --- | --- |
 | [README.md](README.md) | 项目入口和快速导航，说明最少必读文件、常用命令和安全底线。 | 不展开完整工作流和细则。 |
 | [agent.md](agent.md) | Agent 执行入口，说明默认原则、文档职责和最低交付要求。 | 不替代各分册的详细规范。 |
-| [template_usage.md](docs/template_usage.md) | 工作流主文档，沉淀新做分析和中途修改需求两类流程。 | 不写具体项目的业务内容。 |
+| [template_usage.md](docs/template_usage.md) | 工作流主文档，沉淀新做分析、中途修改需求和贯穿式问题记录流程。 | 不写具体项目的业务内容。 |
+| [framework_issue_log.md](docs/framework_issue_log.md) | 记录使用过程中的用户反馈、流程卡点、临时处理方式和框架迭代建议。 | 不替代业务需求变更记录或数据质量问题记录。 |
 | [01_overview_and_principles.md](docs/01_overview_and_principles.md) | 总原则，定义业务框架先行、可复现、口径、安全和方法边界。 | 不维护逐步操作清单。 |
 | [02_project_structure.md](docs/02_project_structure.md) | 目录职责、文件命名、版本管理和 README 内容要求。 | 不规定分析方法细节。 |
 | [03_main_notebook_standard.md](docs/03_main_notebook_standard.md) | 主 Notebook 的章节、备注格式、局部调试和交付前顺序运行要求。 | 不定义具体业务问题。 |
@@ -59,6 +61,7 @@ agent.md
 → docs/template_usage.md
 → docs/01_overview_and_principles.md
 → docs/02_project_structure.md
+→ docs/framework_issue_log.md
 → docs/analysis_framework_template.md
 → docs/final_report_structure_template.md
 → docs/03_main_notebook_standard.md
@@ -91,6 +94,7 @@ agent.md
 - SQL 文件保存在 `sql/`，并由主 Notebook 通过 Python 执行。
 - 复杂 Python 逻辑保存在 `src/`，并由主 Notebook 调用。
 - 如存在可直接执行脚本，`docs/script_catalog.md` 已记录脚本功能、输入、输出和运行方式。
+- 使用过程中出现的问题、用户反馈和框架改进建议已记录到 `docs/framework_issue_log.md`。
 - 关键图表和结果表已导出到 `reports/`。
 - 最终报告由脚本生成，默认只呈现结果、图表、表格、口径和限制。
 - 不包含真实数据库密码、密钥、token 或敏感明细数据。
@@ -108,6 +112,7 @@ agent.md
 - 先完成数据质量检查，再输出业务结果或结论。
 - 先判断是否需要统计分析或机器学习，再选择方法。
 - 运行、新增或修改可直接执行脚本前，先查看并维护 `docs/script_catalog.md`。
+- 遇到用户反馈、流程卡点或临时绕行时，及时维护 `docs/framework_issue_log.md`。
 - 如用户明确要求生成洞察或建议，必须区分事实、推断、建议和局限性。
 - 不因展示技术而使用不必要的复杂模型。
 - 不把相关性直接解释为因果性。

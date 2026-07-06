@@ -8,6 +8,7 @@
 - `docs/template_usage.md` 是工作流主文档，沉淀新做分析和中途修改需求两类流程。
 - `docs/analysis_framework.md` 是具体项目的业务分析框架，正式分析前必须与用户确认。
 - `reports/final/final_report_structure.md` 是具体项目的最终报告结构，正式分析前必须确认。
+- `docs/framework_issue_log.md` 记录使用过程中的问题、用户反馈和框架改进建议。
 - `docs/script_catalog.md` 记录可直接执行脚本的功能、输入、输出和使用规范。
 - `scripts/generate_final_report.py` 根据 `reports/final/report_inputs.yaml` 生成最终报告。
 - `reports/` 保存图表、结果表、报告输入素材和最终交付物。
@@ -26,6 +27,7 @@ docs/template_usage.md
 ```text
 确认业务分析框架
 → 确认最终报告结构
+→ 持续记录使用问题和框架改进建议
 → 配置数据源和项目参数
 → 在 notebooks/main_analysis.ipynb 中迭代分析
 → 导出图表、结果表和 report_inputs.yaml

@@ -21,7 +21,17 @@ docs/analysis_framework.md
 
 如用户提出新的分析需求，应先更新 `docs/analysis_framework.md`，再同步 Notebook、SQL、Python 和报告。
 
-## 3. 最终报告结构
+## 3. 框架使用问题记录
+
+本项目使用过程中的用户反馈、流程卡点、临时处理方式和框架改进建议记录在：
+
+```text
+docs/framework_issue_log.md
+```
+
+该文件应在项目过程中持续更新，不等到交付审计后再补写。
+
+## 4. 最终报告结构
 
 本项目的最终报告结构位于：
 
@@ -43,7 +53,7 @@ python scripts/generate_final_report.py
 python scripts/generate_final_report.py --with-insights
 ```
 
-## 4. 数据来源
+## 5. 数据来源
 
 | 数据源 | 说明 | 时间范围 | 粒度 | 负责人 |
 | --- | --- | --- | --- | --- |
@@ -51,13 +61,13 @@ python scripts/generate_final_report.py --with-insights
 
 如使用数据库，请说明 profile 名称，不要写真实账号、密码或 host。
 
-## 5. 核心指标口径
+## 6. 核心指标口径
 
 | 指标 | 口径 | 粒度 | 备注 |
 | --- | --- | --- | --- |
 | 待填写 | 待填写 | 待填写 | 待填写 |
 
-## 6. 项目结构
+## 7. 项目结构
 
 ```text
 configs/      项目配置
@@ -71,7 +81,7 @@ tests/        测试与校验
 logs/         运行日志
 ```
 
-## 7. 环境准备
+## 8. 环境准备
 
 ```bash
 python -m venv .venv
@@ -79,7 +89,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-## 8. 配置说明
+## 9. 配置说明
 
 如需数据库连接：
 
@@ -95,7 +105,7 @@ pip install -r requirements.txt
 configs/analysis_config.yaml
 ```
 
-## 9. 运行方式
+## 10. 运行方式
 
 打开并从上到下运行：
 
@@ -117,7 +127,7 @@ docs/script_catalog.md
 
 新增、删除、重命名或修改 `scripts/` 下的脚本时，必须同步更新该文档。
 
-## 10. 输出文件
+## 11. 输出文件
 
 | 输出文件 | 说明 |
 | --- | --- |
@@ -139,7 +149,7 @@ reports/final/final_analysis_report.md
 
 报告应基于 `reports/final/final_report_structure.md` 和 `reports/final/report_inputs.yaml` 生成。
 
-## 11. 结果摘要
+## 12. 结果摘要
 
 ### 事实
 
@@ -157,9 +167,10 @@ reports/final/final_analysis_report.md
 
 - 待填写
 
-## 12. 注意事项
+## 13. 注意事项
 
 - 分析必须基于已确认的业务分析框架。
+- 使用过程中出现的问题应及时记录到 `docs/framework_issue_log.md`。
 - 最终报告结构必须在正式分析前确认。
 - 最终报告默认只呈现结果，不自动生成大模型洞察或业务解读。
 - 不提交真实数据库凭据。

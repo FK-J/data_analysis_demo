@@ -109,6 +109,12 @@ reports/final/final_report_structure.md
 
 禁止为了展示技术而强行使用复杂模型。
 
+### 4.7 使用问题持续沉淀
+
+分析过程中的用户反馈、流程卡点、临时绕行和框架不足必须及时记录到 `docs/framework_issue_log.md`。
+
+该记录贯穿业务框架确认、Notebook 调试、需求变更、报告生成和交付审计全过程，不应等到项目结束后一次性补写。
+
 ## 5. Agent 行为原则
 
 ### 5.1 开始项目前
@@ -138,6 +144,7 @@ reports/final/final_report_structure.md
 - 在 Notebook 中解释每一步。
 - 对关键中间结果进行检查。
 - 及时记录口径、假设和异常。
+- 及时记录用户反馈、流程卡点和框架改进建议。
 
 禁止：
 
@@ -172,6 +179,7 @@ docs/template_usage.md
 ```text
 确认业务问题和分析框架
 → 确认最终报告结构
+→ 贯穿记录使用问题和框架改进建议
 → 使用主 Notebook 迭代分析
 → 沉淀 SQL、Python 和脚本目录
 → 导出图表、结果表和 report_inputs.yaml
