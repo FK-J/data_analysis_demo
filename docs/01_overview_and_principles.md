@@ -159,29 +159,22 @@ reports/final/final_report_structure.md
 - 局限性是否说明。
 - 敏感信息是否泄露。
 
-## 6. 默认执行顺序
+## 6. 工作流入口
 
-后续项目建议按以下顺序推进：
+新做分析项目和中途修改分析需求的完整工作流统一维护在：
 
 ```text
-1. 明确业务问题和交付目标
-2. 与用户确认业务分析框架
-3. 创建或更新 docs/analysis_framework.md
-4. 创建或更新 reports/final/final_report_structure.md
-5. 建立项目目录
-6. 创建 README.md、.env.example 和配置文件
-7. 编写数据库连接和 SQL 执行模块
-8. 编写 SQL 抽取与校验脚本
-9. 创建 notebooks/main_analysis.ipynb
-10. 在 Notebook 中连接数据库并执行 SQL
-11. 完成数据质量检查
-12. 完成数据清洗和转换
-13. 完成探索性分析
-14. 完成业务分析
-15. 根据需要完成统计分析
-16. 根据需要完成机器学习建模
-17. 验证结果稳定性
-18. 导出图表、表格和 report_inputs.yaml
-19. 运行 scripts/generate_final_report.py 生成最终报告
-20. 根据检查清单完成交付前检查
+docs/template_usage.md
+```
+
+本文档只保留总体原则。执行时应遵循以下阶段关系：
+
+```text
+确认业务问题和分析框架
+→ 确认最终报告结构
+→ 使用主 Notebook 迭代分析
+→ 沉淀 SQL、Python 和脚本目录
+→ 导出图表、结果表和 report_inputs.yaml
+→ 运行报告生成脚本
+→ 按审计清单交付
 ```

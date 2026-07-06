@@ -26,23 +26,29 @@
 
 > 每个项目必须先形成 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`，再通过 `notebooks/main_analysis.ipynb` 从上到下完整复现，并最终由 `scripts/generate_final_report.py` 生成结果呈现型报告。
 
-## 2. 规范文档目录
+## 2. 文档职责总览
 
-| 文档 | 用途 | 必读场景 |
+文档职责按“入口、工作流、领域规范、模板、检查清单”分层。遇到重复信息时，以表中的“核心作用”为准。
+
+| 文档 | 核心作用 | 不负责 |
 | --- | --- | --- |
-| [01_overview_and_principles.md](docs/01_overview_and_principles.md) | 项目适用范围、规范用语、总体工作原则、Agent 行为原则 | 所有项目必读 |
-| [02_project_structure.md](docs/02_project_structure.md) | 项目目录结构、目录职责、文件命名、版本管理 | 所有项目必读 |
-| [03_main_notebook_standard.md](docs/03_main_notebook_standard.md) | 主 Notebook 定位、章节结构、备注规范、执行规范、骨架模板 | 所有项目必读 |
-| [04_python_sql_database_standard.md](docs/04_python_sql_database_standard.md) | Python 脚本规范、数据库连接、SQL 文件与执行规范 | 涉及 Python、SQL 或数据库时必读 |
-| [05_data_management_quality_cleaning.md](docs/05_data_management_quality_cleaning.md) | 数据分层、原始数据保护、敏感数据、质量检查、清洗转换 | 所有项目必读 |
-| [06_analysis_modeling_standard.md](docs/06_analysis_modeling_standard.md) | 探索性分析、业务分析、统计分析、机器学习建模规范 | 涉及分析或建模时必读 |
-| [07_visualization_reporting_delivery.md](docs/07_visualization_reporting_delivery.md) | 可视化、报告、结论表达、最终交付规范 | 所有交付型项目必读 |
-| [08_reproducibility_audit_checklists.md](docs/08_reproducibility_audit_checklists.md) | 复现、日志、测试、审计、完成检查清单、禁止事项 | 项目完成前必读 |
-| [script_catalog.md](docs/script_catalog.md) | 可执行脚本功能目录、命令示例、输入输出和安全注意事项 | 需要运行、新增或修改脚本时必读 |
-| [analysis_framework_template.md](docs/analysis_framework_template.md) | 业务分析框架模板，先确认业务拆解、分析路径和分析边界 | 新项目启动时必用 |
-| [final_report_structure_template.md](docs/final_report_structure_template.md) | 最终报告呈现结构模板，先确认报告结构和每节分析逻辑 | 新项目启动时必用 |
-| [report_inputs_template.yaml](docs/report_inputs_template.yaml) | 报告生成脚本输入模板 | 导出报告输入素材时使用 |
-| [final_analysis_report_template.md](docs/final_analysis_report_template.md) | 结果呈现型报告结构说明 | 输出最终报告时使用 |
+| [README.md](README.md) | 项目入口和快速导航，说明最少必读文件、常用命令和安全底线。 | 不展开完整工作流和细则。 |
+| [agent.md](agent.md) | Agent 执行入口，说明默认原则、文档职责和最低交付要求。 | 不替代各分册的详细规范。 |
+| [template_usage.md](docs/template_usage.md) | 工作流主文档，沉淀新做分析和中途修改需求两类流程。 | 不写具体项目的业务内容。 |
+| [01_overview_and_principles.md](docs/01_overview_and_principles.md) | 总原则，定义业务框架先行、可复现、口径、安全和方法边界。 | 不维护逐步操作清单。 |
+| [02_project_structure.md](docs/02_project_structure.md) | 目录职责、文件命名、版本管理和 README 内容要求。 | 不规定分析方法细节。 |
+| [03_main_notebook_standard.md](docs/03_main_notebook_standard.md) | 主 Notebook 的章节、备注格式、局部调试和交付前顺序运行要求。 | 不定义具体业务问题。 |
+| [04_python_sql_database_standard.md](docs/04_python_sql_database_standard.md) | Python 模块、数据库连接和 SQL 文件/执行规范。 | 不管理业务报告结构。 |
+| [05_data_management_quality_cleaning.md](docs/05_data_management_quality_cleaning.md) | 数据分层、数据理解、质量检查、清洗和敏感数据处理。 | 不规定统计或建模方法。 |
+| [06_analysis_modeling_standard.md](docs/06_analysis_modeling_standard.md) | EDA、业务分析、指标分析、统计分析和建模方法边界。 | 不规定报告文件格式。 |
+| [07_visualization_reporting_delivery.md](docs/07_visualization_reporting_delivery.md) | 图表、结果表、最终报告、可选洞察和交付表达规范。 | 不维护项目审计清单。 |
+| [08_reproducibility_audit_checklists.md](docs/08_reproducibility_audit_checklists.md) | 复现、日志、测试、审计和交付前检查清单。 | 不描述新项目启动流程。 |
+| [script_catalog.md](docs/script_catalog.md) | 可直接执行脚本的功能、输入、输出、命令示例和安全注意事项。 | 不记录 `src/` 下只能被 import 的辅助模块。 |
+| [analysis_framework_template.md](docs/analysis_framework_template.md) | 具体项目业务分析框架模板，承载业务问题、假设、边界和需求变更记录。 | 不替代最终报告结构。 |
+| [final_report_structure_template.md](docs/final_report_structure_template.md) | 具体项目最终报告结构模板，分析前确认章节、逻辑、图表和表格计划。 | 不承载最终分析结果。 |
+| [report_inputs_template.yaml](docs/report_inputs_template.yaml) | 报告生成脚本的结构化输入模板。 | 不定义业务分析框架。 |
+| [final_analysis_report_template.md](docs/final_analysis_report_template.md) | 最终报告成品的结构说明，指导脚本生成 `final_analysis_report.md`。 | 不作为项目分析前的报告方案确认稿。 |
+| [project_readme_template.md](docs/project_readme_template.md) | 具体项目 README 模板。 | 不作为本模板仓库的入口说明。 |
 
 ## 3. 推荐阅读顺序
 
@@ -50,6 +56,7 @@
 
 ```text
 agent.md
+→ docs/template_usage.md
 → docs/01_overview_and_principles.md
 → docs/02_project_structure.md
 → docs/analysis_framework_template.md
@@ -67,27 +74,7 @@ agent.md
 
 ## 4. 标准项目形态
 
-默认项目形态如下：
-
-```text
-project/
-  agent.md
-  README.md
-  .env.example
-  docs/
-    analysis_framework.md
-  configs/
-  data/
-  sql/
-  src/
-  notebooks/
-    main_analysis.ipynb
-  reports/
-  tests/
-  logs/
-```
-
-详细目录职责见：[02_project_structure.md](docs/02_project_structure.md)。
+标准目录结构、目录职责、文件命名和版本管理规则统一维护在 [02_project_structure.md](docs/02_project_structure.md)。本文档不重复展开目录树。
 
 ## 5. 最低执行要求
 

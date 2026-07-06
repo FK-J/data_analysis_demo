@@ -91,31 +91,21 @@ docs/final_report_structure_template.md
 - 预期结果表。
 - 口径与限制。
 
-最终报告由脚本生成：
+最终报告必须由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 生成到 `reports/final/final_analysis_report.md`。
 
-```bash
-python scripts/generate_final_report.py
-```
-
-脚本默认读取：
+脚本命令、参数、输入输出和写文件行为统一维护在：
 
 ```text
-reports/final/report_inputs.yaml
+docs/script_catalog.md
 ```
 
-并生成：
+最终报告的成品结构说明见：
 
 ```text
-reports/final/final_analysis_report.md
+docs/final_analysis_report_template.md
 ```
 
-默认报告只呈现结果、图表、表格、口径和输出文件路径，不自动生成洞察、归因、业务建议或扩写解读。
-
-如需渲染已准备好的洞察内容，必须由用户明确要求，并显式运行：
-
-```bash
-python scripts/generate_final_report.py --with-insights
-```
+默认报告只呈现结果、图表、表格、口径和输出文件路径，不自动生成洞察、归因、业务建议或扩写解读。如需渲染已准备好的洞察内容，必须由用户明确要求，并按 `docs/script_catalog.md` 中的命令显式开启。
 
 最终交付文件应该保存到：
 

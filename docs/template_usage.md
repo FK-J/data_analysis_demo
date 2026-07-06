@@ -2,17 +2,56 @@
 
 本文档说明如何把本仓库作为新数据分析项目模板使用。
 
+本文档沉淀两类核心工作流：
+
+- 新做分析项目工作流：从业务问题确认开始，到 Notebook 迭代分析、结果导出、脚本生成报告和交付审计。
+- 中途修改分析需求工作流：当分析过程中出现新问题、新口径、新数据范围或新报告呈现要求时，先判断影响范围，再同步更新业务框架、报告结构、Notebook、SQL、Python、脚本目录和输出文件。
+
+## 工作流总览
+
+### 新做分析项目工作流
+
+新做分析项目时，必须先建立业务和交付框架，再进入数据处理和分析。推荐顺序如下：
+
+1. 明确业务背景、决策目标、核心业务问题、预期使用者和交付形式。
+2. 基于 `docs/analysis_framework_template.md` 创建 `docs/analysis_framework.md`，并与用户确认业务分析框架。
+3. 基于 `docs/final_report_structure_template.md` 创建 `reports/final/final_report_structure.md`，并与用户确认最终报告呈现结构。
+4. 配置 `configs/analysis_config.yaml`；如需连接数据库，复制 `configs/database.example.yaml` 为本地不提交的 `configs/database.yaml`。
+5. 查看 `docs/script_catalog.md`，确认当前可执行脚本的功能、输入、输出和安全注意事项是否适用于本项目。
+6. 在 `notebooks/main_analysis.ipynb` 中按章节执行数据加载、质量检查、清洗转换、探索分析、业务问题分析、可选统计或建模、稳健性检查和结果导出。
+7. 将复杂 SQL 沉淀到 `sql/`，复杂 Python 逻辑沉淀到 `src/`；如新增、删除、重命名或修改 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
+8. 将关键图表、结果表和报告输入素材导出到 `reports/figures/`、`reports/tables/` 和 `reports/final/report_inputs.yaml`。
+9. 运行 `python scripts/generate_final_report.py` 生成 `reports/final/final_analysis_report.md`。
+10. 交付前按 `docs/08_reproducibility_audit_checklists.md` 检查 Notebook 顺序执行、输出文件、脚本目录、报告和敏感信息。
+
+日常分析过程中，Notebook 可以围绕某个中间步骤局部调试和重跑；但交付前必须从头到尾顺序执行一次，确认最终结果可复现。
+
+### 中途修改分析需求工作流
+
+分析过程中如果用户提出新的分析需求，不能直接改代码或图表。必须先判断需求变更影响范围，再同步相关文档和产物。推荐顺序如下：
+
+1. 先判断新需求是否影响业务目标、核心业务问题、分析边界、业务假设或分析路径。
+2. 如果影响业务框架，先更新 `docs/analysis_framework.md`，并在其中的“需求变更记录”中记录变更内容、影响的问题/假设和同步状态。
+3. 如果影响报告章节、呈现顺序、汇总方式、预期图表或预期结果表，同步更新 `reports/final/final_report_structure.md`。
+4. 判断需要重跑的 Notebook 范围：数据源或时间范围变化时，从数据加载和质量检查开始；清洗规则变化时，从数据清洗与转换开始；指标口径变化时，从指标计算和业务问题分析开始；仅报告呈现变化时，通常从报告输入素材导出和最终报告生成开始。
+5. 同步修改受影响的 SQL、`src/` 复用逻辑、Notebook 分析章节和报告输入素材。
+6. 如果变更涉及 `scripts/` 下的可执行脚本，必须同步更新 `docs/script_catalog.md`。
+7. 重新生成受影响的图表、结果表和 `reports/final/report_inputs.yaml`。
+8. 重新运行 `python scripts/generate_final_report.py`，更新最终输出的 `reports/final/final_analysis_report.md`。
+9. 检查最终分析报告是否已经反映本次需求变更，包括章节结构、关键结果、图表、表格、口径限制和输出文件路径。
+10. 交付前再次检查新增或变更需求是否已同步到业务框架、报告结构、Notebook、SQL、Python、脚本目录和最终报告。
+
+需求变更后可以先局部重跑受影响章节；但进入交付前，仍必须完整顺序运行主 Notebook，避免隐藏状态、旧缓存或新旧结果混用。
+
 ## 1. 初始化新项目
 
+本节只说明从模板仓库复制到具体项目后的初始化文件操作；完整分析推进顺序以上方“新做分析项目工作流”为准。
+
 1. 复制本模板到新项目目录。
-2. 修改 `configs/analysis_config.yaml` 中的 `project.name`。
-3. 先和用户讨论业务背景、决策目标、核心业务问题、业务拆解框架和分析边界。
-4. 复制 `docs/analysis_framework_template.md` 为 `docs/analysis_framework.md`，保存确认后的业务分析框架。
-5. 复制 `docs/final_report_structure_template.md` 为 `reports/final/final_report_structure.md`，确认最终报告结构和每节分析逻辑。
-6. 参考 `docs/project_readme_template.md` 重写新项目 README。
-7. 查看 `docs/script_catalog.md`，确认当前脚本是否适用于新项目。
-8. 打开 `notebooks/main_analysis.ipynb`，基于 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md` 填写分析过程。
-9. 删除不适用于当前项目的示例 SQL 或占位说明；如新增、删除或修改 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
+2. 修改 `configs/analysis_config.yaml` 中的 `project.name`、时区、随机种子和默认数据源 profile。
+3. 参考 `docs/project_readme_template.md` 重写新项目 README。
+4. 删除不适用于当前项目的示例 SQL、占位说明或空目录说明。
+5. 如调整 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
 
 ## 2. 确认业务分析框架
 
@@ -167,24 +206,10 @@ python scripts/generate_final_report.py --with-insights
 
 ## 8. 提交前检查
 
-提交前至少确认：
-
-- `docs/analysis_framework.md` 已创建并与用户确认。
-- `reports/final/final_report_structure.md` 已创建并与用户确认。
-- 新增或变更的分析需求已同步到 `docs/analysis_framework.md`。
-- `notebooks/main_analysis.ipynb` 可以从上到下顺序运行。
-- 关键 SQL 已保存到 `sql/`。
-- 复杂 Python 逻辑已保存到 `src/`。
-- 如新增、删除或修改可执行脚本，`docs/script_catalog.md` 已同步更新。
-- 关键图表和结果表已导出到 `reports/`。
-- `reports/final/report_inputs.yaml` 已生成。
-- 已通过 `scripts/generate_final_report.py` 生成最终报告。
-- README 已说明复现方式。
-- 没有提交 `.env`、`configs/database.yaml` 或真实敏感数据。
-- Notebook 临时输出已清理，或确认输出需要保留。
-
-完整检查清单见：
+提交前检查项统一维护在：
 
 ```text
 docs/08_reproducibility_audit_checklists.md
 ```
+
+本文档不重复维护检查清单。提交前至少应确认已按该文档完成项目完成检查、最低交付标准检查、禁止事项检查和交付前审计流程。
