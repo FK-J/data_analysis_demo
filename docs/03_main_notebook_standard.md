@@ -8,6 +8,7 @@
 
 - 读取并确认 `docs/analysis_framework.md`。
 - 读取并确认 `reports/final/final_report_structure.md`。
+- 读取并确认 `docs/change_execution_log.md` 中当前变更的影响范围和重跑起点。
 - 说明本次分析基于的业务背景、决策目标、核心业务问题和分析边界。
 - 加载环境、配置和依赖。
 - 连接数据库。
@@ -20,7 +21,7 @@
 
 Notebook 不应承担大量底层函数定义。复杂逻辑必须下沉到 `src/` 目录中的 Python 脚本。
 
-数据分析通常不是一次从头到尾完成的线性工作。Notebook 必须支持分析师围绕某个中间步骤局部调试、调整逻辑并继续运行；但交付前必须从头到尾顺序执行一次，确认最终结果可复现。
+数据分析通常不是一次从头到尾完成的线性工作。Notebook 必须支持分析师围绕某个中间步骤局部调试、调整逻辑并继续运行；变更验证时必须运行到最远受影响正式产物，正式发布按 `docs/09_change_management_standard.md` 执行完整运行。
 
 ## 2. Notebook 必须包含的章节
 
@@ -93,7 +94,7 @@ Notebook 不应承担大量底层函数定义。复杂逻辑必须下沉到 `src
 Notebook 必须满足：
 
 - 可以从第一个 cell 到最后一个 cell 顺序执行。
-- 日常分析允许局部运行，但交付前必须完整顺序运行。
+- 日常分析允许局部运行；变更验证必须到最远受影响产物，正式发布按变更规范完整顺序运行。
 - 局部运行时应依赖明确的输入文件、缓存文件或上游对象，不应依赖无法追溯的隐藏变量。
 - 不依赖历史执行状态或手动修改内存对象生成最终交付结果。
 - 不保留无关实验代码、失败代码和临时调试输出。
@@ -111,6 +112,7 @@ Notebook 必须满足：
 - 输出目录。
 - 是否连接生产数据库。
 - 是否只读执行 SQL。
+- 当前变更编号。
 
 ## 5. Notebook 代码组织原则
 
@@ -151,6 +153,7 @@ notebooks/main_analysis.ipynb
 - 修改 Notebook 章节顺序时，同步更新本文档第 2 节的章节清单。
 - 修改章节备注字段时，同步更新本文档第 3 节的备注规范。
 - 修改主 Notebook 的执行、缓存或交付前检查规则时，同步更新本文档对应规范。
+- 修改变更工作流或完成检查规则时，同步更新 `docs/09_change_management_standard.md`。
 - 项目交付时，以 `notebooks/main_analysis.ipynb` 的实际内容和 `docs/08_reproducibility_audit_checklists.md` 的审计清单为准。
 
 主 Notebook 必须继续覆盖以下核心阶段：
@@ -192,3 +195,4 @@ notebooks/main_analysis.ipynb
 - reports/final/report_inputs.yaml 已生成。
 - docs/script_catalog.md 已覆盖可直接执行脚本，且脚本变更已同步更新该文档。
 - 最终报告由 scripts/generate_final_report.py 生成。
+- 当前变更日志中的受影响环节、检查项和剩余风险已更新。

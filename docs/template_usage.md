@@ -2,25 +2,25 @@
 
 本文档说明如何把本仓库作为新数据分析项目模板使用。
 
-本文档沉淀两类核心工作流：
+本文档沉淀三类核心入口：
 
 - 新做分析项目工作流：从业务问题确认开始，到 Notebook 迭代分析、结果导出、脚本生成报告和交付审计。
-- 中途修改分析需求工作流：当分析过程中出现新问题、新口径、新数据范围或新报告呈现要求时，先判断影响范围，再同步更新业务框架、报告结构、Notebook、SQL、Python、脚本目录和输出文件。
-- 贯穿式使用问题记录：在项目使用过程中持续记录用户反馈、流程卡点和框架改进建议，而不是等交付审计后再总结。
+- 中途修改入口：所有受管修改先更新变更执行日志，详细规则统一引用 `docs/09_change_management_standard.md`。
+- 框架问题入口：只记录框架、模板、工具或流程缺陷，不与普通业务变更重复维护状态。
 
 ## 工作流总览
 
-### 贯穿式使用问题记录
+### 贯穿式变更与问题记录
 
-整个分析过程中，如果出现不满足用户需求、需要用户指导修改、流程不清楚、文档不足、脚本难用、Notebook 调试不顺或其他影响交付效率的问题，必须及时记录到：
+影响业务契约、计算结果、正式产物或复现链路的修改，必须先记录到：
 
 ```text
-docs/framework_issue_log.md
+docs/change_execution_log.md
 ```
 
-记录时应说明问题发生阶段、当前影响、临时处理方式，并判断它是项目特定问题、框架通用问题还是待判断问题。
+该文件是修改执行状态的唯一记录。L0-L3 判级、重跑范围和完成条件统一遵循 `docs/09_change_management_standard.md`。
 
-如果问题会影响当前分析结果或最终报告，必须在同一轮修改中同步更新受影响的 Notebook、SQL、Python、报告输入素材和最终报告。如果问题属于框架通用问题，应在记录中写明建议修改的文档、模板、Notebook 或脚本，但是否立即修改框架需要结合当前交付节奏和用户确认判断。
+如果修改暴露出框架、模板、工具或流程缺陷，再同步更新 `docs/framework_issue_log.md` 并关联 `change_id`。普通业务需求和执行状态不重复写入问题日志。
 
 ### 新做分析项目工作流
 
@@ -29,46 +29,39 @@ docs/framework_issue_log.md
 1. 明确业务背景、决策目标、核心业务问题、预期使用者和交付形式。
 2. 基于 `docs/analysis_framework_template.md` 创建 `docs/analysis_framework.md`，并与用户确认业务分析框架。
 3. 基于 `docs/final_report_structure_template.md` 创建 `reports/final/final_report_structure.md`，并与用户确认最终报告呈现结构。
-4. 查看或初始化 `docs/framework_issue_log.md`，作为项目使用过程中的持续问题记录入口。
-5. 配置 `configs/analysis_config.yaml`；如需连接数据库，复制 `configs/database.example.yaml` 为本地不提交的 `configs/database.yaml`。
-6. 查看 `docs/script_catalog.md`，确认当前可执行脚本的功能、输入、输出和安全注意事项是否适用于本项目。
-7. 在 `notebooks/main_analysis.ipynb` 中按章节执行数据加载、质量检查、清洗转换、探索分析、业务问题分析、可选统计或建模、稳健性检查和结果导出；遇到用户反馈、流程卡点或临时绕行时，同步更新 `docs/framework_issue_log.md`。
-8. 将复杂 SQL 沉淀到 `sql/`，复杂 Python 逻辑沉淀到 `src/`；如新增、删除、重命名或修改 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
-9. 将关键图表、结果表和报告输入素材导出到 `reports/figures/`、`reports/tables/` 和 `reports/final/report_inputs.yaml`。
-10. 运行 `python scripts/generate_final_report.py` 生成 `reports/final/final_analysis_report.md`。
-11. 交付前按 `docs/08_reproducibility_audit_checklists.md` 检查 Notebook 顺序执行、输出文件、脚本目录、问题记录、报告和敏感信息。
+4. 配置 `configs/analysis_config.yaml`，并在 `docs/change_execution_log.md` 中创建项目初始化记录。
+5. 查看或初始化 `docs/framework_issue_log.md`，仅作为框架、模板、工具和流程缺陷入口。
+6. 如需连接数据库，复制 `configs/database.example.yaml` 为本地不提交的 `configs/database.yaml`。
+7. 查看 `docs/script_catalog.md`，确认当前可执行脚本的功能、输入、输出和安全注意事项是否适用于本项目。
+8. 在 `notebooks/main_analysis.ipynb` 中按章节执行数据加载、质量检查、清洗转换、探索分析、业务问题分析、可选统计或建模、稳健性检查和结果导出。
+9. 将复杂 SQL 沉淀到 `sql/`，复杂 Python 逻辑沉淀到 `src/`；如修改 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
+10. 将关键图表、结果表和报告输入素材导出到标准目录。
+11. 从头到尾顺序运行主 Notebook，生成最终报告，再按 `docs/08_reproducibility_audit_checklists.md` 审计交付。
 
-日常分析过程中，Notebook 可以围绕某个中间步骤局部调试和重跑；但交付前必须从头到尾顺序执行一次，确认最终结果可复现。
+日常分析可以局部调试；每次受管变更关闭时必须运行到最远受影响产物，正式交付前必须完整运行。
 
 ### 中途修改分析需求工作流
 
-分析过程中如果用户提出新的分析需求，不能直接改代码或图表。必须先判断需求变更影响范围，再同步相关文档和产物。推荐顺序如下：
+分析过程中出现新需求时，不能直接改代码、图表或报告。执行顺序如下：
 
-1. 先判断新需求是否影响业务目标、核心业务问题、分析边界、业务假设或分析路径。
-2. 判断本次修改是否源于用户使用问题、流程卡点、输出不符合预期或框架不足；如是，同步更新 `docs/framework_issue_log.md`。
-3. 如果影响业务框架，先更新 `docs/analysis_framework.md`，并在其中的“需求变更记录”中记录变更内容、影响的问题/假设和同步状态。
-4. 如果影响报告章节、呈现顺序、汇总方式、预期图表或预期结果表，同步更新 `reports/final/final_report_structure.md`。
-5. 判断需要重跑的 Notebook 范围：数据源或时间范围变化时，从数据加载和质量检查开始；清洗规则变化时，从数据清洗与转换开始；指标口径变化时，从指标计算和业务问题分析开始；仅报告呈现变化时，通常从报告输入素材导出和最终报告生成开始。
-6. 同步修改受影响的 SQL、`src/` 复用逻辑、Notebook 分析章节和报告输入素材。
-7. 如果变更涉及 `scripts/` 下的可执行脚本，必须同步更新 `docs/script_catalog.md`。
-8. 重新生成受影响的图表、结果表和 `reports/final/report_inputs.yaml`。
-9. 重新运行 `python scripts/generate_final_report.py`，更新最终输出的 `reports/final/final_analysis_report.md`。
-10. 检查最终分析报告是否已经反映本次需求变更，包括章节结构、关键结果、图表、表格、口径限制和输出文件路径。
-11. 如果本次变更暴露出框架通用问题，在 `docs/framework_issue_log.md` 中补充框架修改建议和关联文件。
-12. 交付前再次检查新增或变更需求是否已同步到业务框架、报告结构、Notebook、SQL、Python、脚本目录、问题记录和最终报告。
-
-需求变更后可以先局部重跑受影响章节；但进入交付前，仍必须完整顺序运行主 Notebook，避免隐藏状态、旧缓存或新旧结果混用。
+1. 在 `docs/change_execution_log.md` 创建本次变更记录。
+2. 按 `docs/09_change_management_standard.md` 确认等级、验收标准、影响范围、重跑起点和必达产物。
+3. 契约发生变化时，先同步业务框架或报告结构；修复实现以重新符合原契约时，不改写契约。
+4. 将状态改为“进行中”后实施，并从最早受影响阶段运行到最远受影响产物。
+5. 更新检查结果；框架或流程存在缺陷时，另在 `docs/framework_issue_log.md` 记录根因并关联 Change ID。
+6. 所有必做项完成后把记录改为“已完成”；准备交付时完整运行主 Notebook 并重新生成报告。
 
 ## 1. 初始化新项目
 
 本节只说明从模板仓库复制到具体项目后的初始化文件操作；完整分析推进顺序以上方“新做分析项目工作流”为准。
 
 1. 复制本模板到新项目目录。
-2. 修改 `configs/analysis_config.yaml` 中的 `project.name`、时区、随机种子和默认数据源 profile。
+2. 修改 `configs/analysis_config.yaml` 中的项目名称、时区、随机种子和默认数据源 profile。
 3. 参考 `docs/project_readme_template.md` 重写新项目 README。
 4. 删除不适用于当前项目的示例 SQL、占位说明或空目录说明。
-5. 保留或初始化 `docs/framework_issue_log.md`，用于记录项目使用过程中的问题和框架改进建议。
-6. 如调整 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
+5. 在 `docs/change_execution_log.md` 中创建项目初始化记录。
+6. 保留 `docs/framework_issue_log.md`，用于记录框架、模板、工具和流程缺陷。
+7. 如调整 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
 
 ## 2. 确认业务分析框架
 
@@ -207,6 +200,8 @@ docs/report_inputs_template.yaml
 python scripts/generate_final_report.py
 ```
 
+正式交付前，先从头到尾顺序运行主 Notebook，再执行上述报告生成命令。
+
 具体项目交付文件保存为：
 
 ```text
@@ -229,4 +224,4 @@ python scripts/generate_final_report.py --with-insights
 docs/08_reproducibility_audit_checklists.md
 ```
 
-本文档不重复维护检查清单。提交前至少应确认已按该文档完成项目完成检查、最低交付标准检查、禁止事项检查和交付前审计流程。
+本文档不重复维护检查清单。提交前至少应确认已按该文档完成项目完成检查、最低交付标准检查、禁止事项检查和交付前审计流程，并通过 `docs/09_change_management_standard.md` 的发布门禁。

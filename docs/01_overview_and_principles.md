@@ -109,11 +109,23 @@ reports/final/final_report_structure.md
 
 禁止为了展示技术而强行使用复杂模型。
 
-### 4.7 使用问题持续沉淀
+### 4.7 变更先登记并完成受影响流程
 
-分析过程中的用户反馈、流程卡点、临时绕行和框架不足必须及时记录到 `docs/framework_issue_log.md`。
+影响业务契约、计算结果、正式产物或复现链路的修改，必须先记录到 `docs/change_execution_log.md`。变更等级、重跑起点和完成条件统一遵循：
 
-该记录贯穿业务框架确认、Notebook 调试、需求变更、报告生成和交付审计全过程，不应等到项目结束后一次性补写。
+```text
+docs/09_change_management_standard.md
+```
+
+变更执行日志是修改状态的唯一记录。业务框架、报告结构和问题日志只维护各自内容，不重复记录执行状态。
+
+禁止把文件写入成功、局部 cell 正常或单张图表正确作为变更完成标准。
+
+### 4.8 框架问题持续沉淀
+
+框架、模板、工具或流程本身暴露出的卡点、临时绕行和通用不足必须及时记录到 `docs/framework_issue_log.md`。
+
+普通业务需求及其执行状态不在问题日志重复记录。问题日志必须关联触发问题或处理问题的 `change_id`。
 
 ## 5. Agent 行为原则
 
@@ -139,12 +151,13 @@ reports/final/final_report_structure.md
 必须：
 
 - 保持 `notebooks/main_analysis.ipynb` 为主执行入口。
+- 按 `docs/09_change_management_standard.md` 维护当前变更并完成受影响流程。
 - 将复杂逻辑封装到 `src/`。
 - 将 SQL 逻辑保存到 `sql/`。
 - 在 Notebook 中解释每一步。
 - 对关键中间结果进行检查。
 - 及时记录口径、假设和异常。
-- 及时记录用户反馈、流程卡点和框架改进建议。
+- 及时在变更执行日志中维护需求与完成情况；框架或流程缺陷另行记录到问题日志。
 
 禁止：
 
@@ -168,17 +181,20 @@ reports/final/final_report_structure.md
 
 ## 6. 工作流入口
 
-新做分析项目和中途修改分析需求的完整工作流统一维护在：
+新做分析项目和中途修改分析需求的工作流入口统一维护在：
 
 ```text
 docs/template_usage.md
 ```
+
+后续修改的判级、重跑和完成条件统一维护在 `docs/09_change_management_standard.md`。
 
 本文档只保留总体原则。执行时应遵循以下阶段关系：
 
 ```text
 确认业务问题和分析框架
 → 确认最终报告结构
+→ 创建变更执行记录
 → 贯穿记录使用问题和框架改进建议
 → 使用主 Notebook 迭代分析
 → 沉淀 SQL、Python 和脚本目录

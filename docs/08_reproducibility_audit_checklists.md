@@ -9,7 +9,8 @@
 - 项目名称。
 - 项目背景。
 - 业务分析框架文档位置。
-- 框架使用问题记录 `docs/framework_issue_log.md` 的位置和维护要求。
+- 变更管理规范和 `docs/change_execution_log.md` 的位置与维护要求。
+- 框架问题记录 `docs/framework_issue_log.md` 的位置和维护要求。
 - 最终报告结构文件位置。
 - 目录结构说明。
 - 环境依赖。
@@ -65,25 +66,36 @@ logs/
 
 禁止将数据库密码、token、密钥或敏感明细数据写入日志。
 
-## 3. 使用问题与框架迭代记录规范
+## 3. 框架问题与迭代记录规范
 
-使用过程中出现的问题应该及时记录到：
+框架、模板、工具或流程本身出现的问题应该及时记录到：
 
 ```text
 docs/framework_issue_log.md
 ```
 
-需要记录的问题包括用户反馈、输出不符合预期、流程卡点、文档不足、脚本难用、Notebook 调试不顺和临时绕行方案。
+需要记录的问题包括规范冲突、流程卡点、文档不足、脚本难用、Notebook 无法按规范复现和临时绕行方案。
 
-记录时必须判断问题类型：
+普通业务需求和执行状态不在问题日志重复记录。问题处理应关联 Change ID，执行状态以 `docs/change_execution_log.md` 为准。
 
-- 项目特定问题。
-- 框架通用问题。
-- 待判断问题。
+交付前只检查已发现的框架问题是否记录、分类和关联，不把问题记录延后到最后一次性补写。
 
-交付前只检查使用过程中出现的问题是否已记录、分类和处理，不把问题记录延后到最后一次性补写。
+## 4. 每次变更完成检查
 
-## 4. 测试与校验规范
+所有受管变更必须遵循 `docs/09_change_management_standard.md`。
+
+变更完成前必须确认：
+
+- `docs/change_execution_log.md` 已填写等级、验收标准、影响范围、重跑起点和必达产物。
+- 业务框架或报告结构变化已经同步。
+- 已从最早受影响环节运行到最远受影响产物。
+- 数据质量、指标口径、总计、筛选范围和新旧结果差异已按需检查。
+- 图表、结果表、报告输入和最终报告已按影响范围更新。
+- 不存在未说明的失败项或未完成项。
+
+正式交付前还必须从头到尾顺序运行主 Notebook，并重新生成最终报告。
+
+## 5. 测试与校验规范
 
 关键逻辑必须进行校验。
 
@@ -100,7 +112,7 @@ docs/framework_issue_log.md
 
 简单项目可以在 Notebook 中完成校验。复杂项目应该在 `tests/` 目录中编写测试。
 
-## 5. 项目完成检查清单
+## 6. 项目完成检查清单
 
 每个项目完成前，必须逐项检查：
 
@@ -109,9 +121,11 @@ docs/framework_issue_log.md
 - [ ] 已与用户确认最终报告呈现结构。
 - [ ] `reports/final/final_report_structure.md` 已创建并保存。
 - [ ] `docs/framework_issue_log.md` 已保留或创建。
+- [ ] 当前修改已记录到 `docs/change_execution_log.md`。
+- [ ] 等级、验收标准、影响范围、重跑起点和必达产物已确认。
 - [ ] 核心业务问题、业务拆解框架、分析路径和分析边界已说明。
-- [ ] 新增或变更的分析需求已同步到 `docs/analysis_framework.md`。
-- [ ] 使用过程中出现的用户反馈、流程卡点或临时绕行已记录到 `docs/framework_issue_log.md`。
+- [ ] 业务契约发生变化时，已同步到 `docs/analysis_framework.md` 并关联 `change_id`。
+- [ ] 框架、模板、工具或流程缺陷已记录到 `docs/framework_issue_log.md` 并关联 `change_id`。
 - [ ] 框架通用问题已写明修改建议、影响范围和关联文件。
 - [ ] 分析目标已明确。
 - [ ] 决策场景已明确。
@@ -131,6 +145,7 @@ docs/framework_issue_log.md
 - [ ] 清洗前后数据量变化已记录。
 - [ ] Python 复杂逻辑已封装到 `src/`。
 - [ ] 主 Notebook 可以从上到下完整运行。
+- [ ] 当前修改已运行到最远受影响产物，相关检查和剩余风险已记录。
 - [ ] 每个主要 Notebook 步骤都有 Markdown 备注。
 - [ ] 关键图表已导出到 `reports/figures/`。
 - [ ] 关键结果表已导出到 `reports/tables/`。
@@ -150,13 +165,14 @@ docs/framework_issue_log.md
 - [ ] 没有泄露敏感数据。
 - [ ] README 已说明复现方式。
 
-## 6. 最低交付标准
+## 7. 最低交付标准
 
 如果项目时间紧张，至少必须满足以下最低标准：
 
 - 有 `notebooks/main_analysis.ipynb`。
 - 有已确认的 `docs/analysis_framework.md`。
-- 有 `docs/framework_issue_log.md`，且已记录使用过程中出现的问题或明确无新增问题。
+- 有 `docs/framework_issue_log.md`，且已记录框架、模板、工具或流程缺陷，或明确无新增问题。
+- 有当前修改的变更执行记录，且所有必做项已完成。
 - 有已确认的 `reports/final/final_report_structure.md`。
 - Notebook 可以顺序执行。
 - Notebook 每个主要步骤有备注。
@@ -170,15 +186,16 @@ docs/framework_issue_log.md
 - 最终报告由 `scripts/generate_final_report.py` 生成。
 - 不包含真实数据库密码、密钥或敏感明细数据。
 
-## 7. 禁止事项汇总
+## 8. 禁止事项汇总
 
 以下行为在项目中禁止出现：
 
 - 未明确业务问题就开始分析。
 - 未确认业务分析框架就开始取数、建模或制图。
 - 未确认最终报告结构就开始执行分析。
-- 用户新增分析需求后，未同步更新 `docs/analysis_framework.md`。
-- 用户反馈、流程卡点或临时绕行发生后，未记录到 `docs/framework_issue_log.md`。
+- 业务契约发生变化后，未同步更新 `docs/analysis_framework.md` 或未关联 `change_id`。
+- 受管修改未先更新变更执行日志，或只修改局部文件而未运行下游流程。
+- 框架、模板、工具或流程缺陷发生后，未记录到 `docs/framework_issue_log.md`。
 - 发现框架通用问题后，未判断影响范围或未形成修改建议。
 - 未进行数据质量检查就输出结果。
 - 修改 `data/raw/` 原始数据。
@@ -198,30 +215,26 @@ docs/framework_issue_log.md
 - 只交付代码、Notebook 或结果图表，不交付脚本生成的最终报告。
 - 未经用户明确要求，生成大模型洞察或业务解读。
 
-## 8. 交付前审计流程
+## 9. 交付前审计流程
 
-交付前建议按以下顺序审计：
+交付前必须按以下顺序审计：
 
 ```text
 1. 检查 docs/analysis_framework.md 是否存在且已确认
 2. 检查 reports/final/final_report_structure.md 是否存在且已确认
-3. 检查 docs/framework_issue_log.md 是否覆盖使用过程中出现的问题、分类和处理状态
-4. 检查新增需求是否已同步到分析框架和报告结构
-5. 从头运行 notebooks/main_analysis.ipynb
-6. 检查是否有报错
-7. 检查 SQL 文件是否存在且有头部说明
-8. 检查 Python 脚本是否由 Notebook 调用
-9. 检查 docs/script_catalog.md 是否覆盖可直接执行脚本，并与 scripts/ 目录一致
-10. 检查数据质量结果是否展示
-11. 检查图表和结果表是否落地
-12. 检查 reports/final/report_inputs.yaml 是否生成
-13. 运行 scripts/generate_final_report.py
-14. 检查最终报告是否保存
-15. 检查是否默认未生成大模型洞察
-16. 检查是否泄露敏感信息
+3. 检查 docs/change_execution_log.md 中的等级、影响范围、完成情况和风险
+4. 检查业务框架和报告结构变化是否同步
+5. 从头到尾顺序运行 notebooks/main_analysis.ipynb
+6. 检查是否有报错，数据质量结果是否通过
+7. 检查 SQL 文件和 Python 脚本是否由 Notebook 调用
+8. 检查 docs/script_catalog.md 是否与 scripts/ 目录一致
+9. 检查图表、结果表和 report_inputs.yaml 是否更新
+10. 运行 scripts/generate_final_report.py
+11. 检查最终报告的结构、占位内容和敏感信息
+12. 将变更执行记录更新为已完成或说明阻塞项
 ```
 
-## 9. 审计结果记录
+## 10. 审计结果记录
 
 项目完成时，建议在 Notebook 最后一节记录：
 
@@ -233,6 +246,9 @@ docs/framework_issue_log.md
 - 使用问题记录状态：
 - 框架通用问题处理状态：
 - 分析框架变更同步状态：
+- Change ID：
+- 变更执行状态：
+- 重跑起点和终点：
 - Notebook 顺序执行状态：
 - 数据质量检查状态：
 - SQL 文件检查状态：

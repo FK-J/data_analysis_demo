@@ -12,6 +12,8 @@ project/
   docs/
     analysis_framework.md
     framework_issue_log.md
+    09_change_management_standard.md
+    change_execution_log.md
     analysis_framework_template.md
     final_report_structure_template.md
     final_analysis_report_template.md
@@ -61,7 +63,9 @@ project/
 - `agent.md`：项目规范入口和文档目录。
 - `docs/`：细节规范文档、业务分析框架和报告模板。
 - `docs/analysis_framework.md`：具体项目的业务分析框架，正式分析前必须与用户确认。
-- `docs/framework_issue_log.md`：记录使用过程中的问题、用户反馈、临时处理方式和框架迭代建议。
+- `docs/framework_issue_log.md`：记录框架、模板、工具或流程缺陷及改进建议，并关联 `change_id`。
+- `docs/09_change_management_standard.md`：后续修改的唯一分级、重跑和完成规范。
+- `docs/change_execution_log.md`：每次修改的需求、影响范围、完成情况和风险记录。
 - `docs/analysis_framework_template.md`：业务分析框架模板。
 - `docs/final_report_structure_template.md`：最终报告结构模板。
 - `docs/final_analysis_report_template.md`：结果呈现型报告结构说明。
@@ -173,7 +177,8 @@ report_inputs.yaml
 - 项目背景。
 - 业务问题。
 - 业务分析框架文档位置。
-- 框架使用问题记录文档位置。
+- 变更管理规范和变更执行日志位置。
+- 框架问题记录文档位置。
 - 最终报告结构文件位置。
 - 目录结构说明。
 - 环境依赖。
@@ -212,6 +217,7 @@ reports/final/final_report_structure.md
 - 数据库连接示例。
 - 是否使用缓存。
 - 是否只读执行 SQL。
+- 当前变更编号和是否使用缓存。
 
 禁止在配置文件中提交真实数据库密码、token、密钥或私有连接信息。
 
@@ -262,6 +268,8 @@ project/
   docs/
     analysis_framework.md
     framework_issue_log.md
+    09_change_management_standard.md
+    change_execution_log.md
   data/
   sql/
   src/

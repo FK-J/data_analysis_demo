@@ -6,9 +6,11 @@
 
 - `notebooks/main_analysis.ipynb` 是唯一主分析入口，也是交互式分析工作台。
 - `docs/template_usage.md` 是工作流主文档，沉淀新做分析和中途修改需求两类流程。
+- `docs/09_change_management_standard.md` 是后续修改的唯一变更管理规范。
+- `docs/change_execution_log.md` 记录每次后续修改的执行范围和完成情况。
 - `docs/analysis_framework.md` 是具体项目的业务分析框架，正式分析前必须与用户确认。
 - `reports/final/final_report_structure.md` 是具体项目的最终报告结构，正式分析前必须确认。
-- `docs/framework_issue_log.md` 记录使用过程中的问题、用户反馈和框架改进建议。
+- `docs/framework_issue_log.md` 只记录框架、模板、工具或流程缺陷及改进建议。
 - `docs/script_catalog.md` 记录可直接执行脚本的功能、输入、输出和使用规范。
 - `scripts/generate_final_report.py` 根据 `reports/final/report_inputs.yaml` 生成最终报告。
 - `reports/` 保存图表、结果表、报告输入素材和最终交付物。
@@ -27,13 +29,16 @@ docs/template_usage.md
 ```text
 确认业务分析框架
 → 确认最终报告结构
+→ 在 change_execution_log.md 登记需求、等级和验收标准
 → 持续记录使用问题和框架改进建议
 → 配置数据源和项目参数
 → 在 notebooks/main_analysis.ipynb 中迭代分析
 → 导出图表、结果表和 report_inputs.yaml
-→ 运行 scripts/generate_final_report.py
+→ 完整运行主 Notebook 并生成最终报告
 → 按 docs/08_reproducibility_audit_checklists.md 审计交付
 ```
+
+后续修改不能以“文件已改”作为完成标准。必须运行到最远受影响产物，详细规则见 `docs/09_change_management_standard.md`。
 
 ## 环境准备
 
@@ -84,4 +89,4 @@ docs/script_catalog.md
 - 未脱敏的敏感明细数据
 - 大型原始数据文件
 
-详细目录职责、Notebook 规范、SQL/Python 规范、数据质量、分析建模、报告交付和审计清单，请查看 `agent.md` 中的文档职责总览。
+详细目录职责、变更管理、Notebook 规范、SQL/Python 规范、数据质量、分析建模、报告交付和审计清单，请查看 `agent.md` 中的文档职责总览。

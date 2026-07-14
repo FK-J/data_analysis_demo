@@ -93,6 +93,8 @@ docs/final_report_structure_template.md
 
 最终报告必须由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 生成到 `reports/final/final_analysis_report.md`。
 
+后续修改影响报告时，必须重新生成受影响图表、表格、报告输入和最终报告。准备正式交付时，先从头到尾顺序执行主 Notebook，再运行报告生成脚本。
+
 脚本命令、参数、输入输出和写文件行为统一维护在：
 
 ```text

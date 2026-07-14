@@ -19,17 +19,26 @@ docs/analysis_framework.md
 
 正式取数、清洗、建模和制图前，必须先确认该文档。
 
-如用户提出新的分析需求，应先更新 `docs/analysis_framework.md`，再同步 Notebook、SQL、Python 和报告。
+如用户提出新的分析需求，应先更新 `docs/change_execution_log.md`；只有业务契约发生变化时才更新 `docs/analysis_framework.md`。
 
-## 3. 框架使用问题记录
+## 3. 变更管理与框架问题
 
-本项目使用过程中的用户反馈、流程卡点、临时处理方式和框架改进建议记录在：
+本项目的变更管理规范和执行日志位于：
+
+```text
+docs/09_change_management_standard.md
+docs/change_execution_log.md
+```
+
+影响业务契约、计算结果、正式产物或复现链路的修改必须先登记，并运行到最远受影响产物。
+
+框架、模板、工具或流程缺陷记录在：
 
 ```text
 docs/framework_issue_log.md
 ```
 
-该文件应在项目过程中持续更新，不等到交付审计后再补写。
+普通业务需求和执行状态不在问题日志重复记录。
 
 ## 4. 最终报告结构
 
@@ -46,6 +55,8 @@ reports/final/final_report_structure.md
 ```bash
 python scripts/generate_final_report.py
 ```
+
+正式交付前必须从头到尾顺序运行主 Notebook，再生成最终报告。
 
 默认不生成大模型洞察或业务解读。若需要渲染已准备好的洞察内容，应显式运行：
 
@@ -107,13 +118,13 @@ configs/analysis_config.yaml
 
 ## 10. 运行方式
 
-打开并从上到下运行：
+开发调试时可以打开并局部运行：
 
 ```text
 notebooks/main_analysis.ipynb
 ```
 
-然后生成最终报告：
+正式交付时应从头到尾运行主 Notebook，然后生成报告：
 
 ```bash
 python scripts/generate_final_report.py
@@ -170,7 +181,8 @@ reports/final/final_analysis_report.md
 ## 13. 注意事项
 
 - 分析必须基于已确认的业务分析框架。
-- 使用过程中出现的问题应及时记录到 `docs/framework_issue_log.md`。
+- 受管修改必须先更新 `docs/change_execution_log.md`，并运行到最远受影响产物。
+- 框架、模板、工具或流程缺陷应及时记录到 `docs/framework_issue_log.md`。
 - 最终报告结构必须在正式分析前确认。
 - 最终报告默认只呈现结果，不自动生成大模型洞察或业务解读。
 - 不提交真实数据库凭据。
