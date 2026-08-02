@@ -1,10 +1,13 @@
 jupyter
 ipykernel
+nbformat
+nbclient
 pandas
 numpy
 SQLAlchemy
 PyMySQL
 PyYAML
+jsonschema
 python-dotenv
 matplotlib
 seaborn

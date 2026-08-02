@@ -43,6 +43,15 @@ Notebook 执行完成后，必须确认：
 - 图表和结果表路径正确。
 - 最终报告结果与输出文件一致。
 
+除分析师在 Jupyter 中交互检查外，还必须运行 `python scripts/run_notebook.py`。该命令使用干净内核从头执行主 Notebook，并保存：
+
+```text
+logs/runs/<run_id>/executed_main_analysis.ipynb
+logs/runs/<run_id>/manifest.json
+```
+
+运行清单记录项目、Git commit、开始和结束时间、执行状态、预检结果、输出路径和错误摘要，用于失败定位和交付审计。
+
 ## 2. 日志与审计规范
 
 关键执行过程应该记录日志。
@@ -112,6 +121,15 @@ docs/framework_issue_log.md
 
 简单项目可以在 Notebook 中完成校验。复杂项目应该在 `tests/` 目录中编写测试。
 
+项目结构和交付物检查必须使用：
+
+```bash
+python scripts/validate_project.py
+python scripts/audit_project.py
+```
+
+前者检查配置 Schema、必需文件、Notebook 章节、占位内容、SQL 只读策略和敏感文件；后者进一步检查图表、结果表、报告输入、最终报告及最近一次无界面执行证据。
+
 ## 6. 项目完成检查清单
 
 每个项目完成前，必须逐项检查：
@@ -146,6 +164,8 @@ docs/framework_issue_log.md
 - [ ] Python 复杂逻辑已封装到 `src/`。
 - [ ] 主 Notebook 可以从上到下完整运行。
 - [ ] 当前修改已运行到最远受影响产物，相关检查和剩余风险已记录。
+- [ ] `project.yaml` 已通过 Schema 校验，Notebook 章节与配置一致。
+- [ ] 最近一次 `scripts/run_notebook.py` 执行成功并保存运行清单。
 - [ ] 每个主要 Notebook 步骤都有 Markdown 备注。
 - [ ] 关键图表已导出到 `reports/figures/`。
 - [ ] 关键结果表已导出到 `reports/tables/`。
@@ -164,6 +184,7 @@ docs/framework_issue_log.md
 - [ ] 没有提交真实数据库凭据。
 - [ ] 没有泄露敏感数据。
 - [ ] README 已说明复现方式。
+- [ ] `scripts/audit_project.py` 没有失败项。
 
 ## 7. 最低交付标准
 
@@ -224,14 +245,16 @@ docs/framework_issue_log.md
 2. 检查 reports/final/final_report_structure.md 是否存在且已确认
 3. 检查 docs/change_execution_log.md 中的等级、影响范围、完成情况和风险
 4. 检查业务框架和报告结构变化是否同步
-5. 从头到尾顺序运行 notebooks/main_analysis.ipynb
-6. 检查是否有报错，数据质量结果是否通过
-7. 检查 SQL 文件和 Python 脚本是否由 Notebook 调用
-8. 检查 docs/script_catalog.md 是否与 scripts/ 目录一致
-9. 检查图表、结果表和 report_inputs.yaml 是否更新
-10. 运行 scripts/generate_final_report.py
-11. 检查最终报告的结构、占位内容和敏感信息
-12. 将变更执行记录更新为已完成或说明阻塞项
+5. 运行 scripts/validate_project.py
+6. 运行 scripts/run_notebook.py，在干净内核中从头执行主 Notebook
+7. 检查是否有报错，数据质量结果是否通过
+8. 检查 SQL 文件和 Python 脚本是否由 Notebook 调用
+9. 检查 docs/script_catalog.md 是否与 scripts/ 目录一致
+10. 检查图表、结果表和 report_inputs.yaml 是否更新
+11. 运行 scripts/generate_final_report.py
+12. 检查最终报告的结构、占位内容、洞察开关和敏感信息
+13. 运行 scripts/audit_project.py 并确认没有失败项
+14. 将变更执行记录更新为已完成或说明阻塞项
 ```
 
 ## 10. 审计结果记录

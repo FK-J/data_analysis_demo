@@ -5,6 +5,8 @@ configs/database.yaml
 .ipynb_checkpoints/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.harness/status.yaml
 
 data/raw/*
 !data/raw/.gitkeep

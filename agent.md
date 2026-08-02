@@ -8,6 +8,7 @@
 
 默认执行原则：
 
+- 开始前必须读取并校验 `project.yaml`；它决定项目模式、数据源、可选 Notebook 章节和预期交付物。
 - 在正式读取数据、编写 SQL、建模或制图之前，必须先与用户确认业务分析框架。
 - 业务分析框架必须保存为 `docs/analysis_framework.md`，可基于 `docs/analysis_framework_template.md` 创建。
 - 在分析执行前，应同步确认最终报告呈现结构，并保存为 `reports/final/final_report_structure.md`。
@@ -17,6 +18,7 @@
 - L3 变更、无法确认缓存有效性或准备正式交付时，必须从头到尾顺序运行主 Notebook 并重新生成最终报告。
 - 只有框架、模板、工具或流程本身存在缺陷、卡点或重复绕行时，才记录到 `docs/framework_issue_log.md`，并关联 `change_id`。
 - 必须使用 `notebooks/main_analysis.ipynb` 作为唯一主分析入口。
+- Notebook 必须基于 `templates/notebook_sections.yaml` 和 `project.yaml` 生成；数据库、统计和建模章节只在配置启用时出现。
 - 可以使用 Python 脚本封装复杂逻辑，但必须由主 Notebook 调用。
 - 可以使用 SQL 文件沉淀抽取、转换和校验逻辑，但必须由 Python 在主 Notebook 中执行。
 - 可直接执行脚本的功能、输入、输出和使用规范必须记录在 `docs/script_catalog.md`。
@@ -25,6 +27,8 @@
 - Notebook 每个主要步骤必须写清楚目的、上游依赖、输入文件/对象、输出文件/对象、是否可缓存和调试提示。
 - 所有关键结果或结论必须可以追溯到数据、SQL、Python 脚本或 Notebook cell。
 - 最终报告必须通过 `scripts/generate_final_report.py` 生成，默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
+- 交付前必须依次通过 `scripts/validate_project.py`、`scripts/run_notebook.py` 和 `scripts/audit_project.py`。
+- 自动化脚本只用于生成与验收，不得绕过主 Notebook 形成第二套分析流程。
 
 核心目标：
 
@@ -85,7 +89,7 @@ agent.md
 
 ## 4. 标准项目形态
 
-标准目录结构、目录职责、文件命名和版本管理规则统一维护在 [02_project_structure.md](docs/02_project_structure.md)。本文档不重复展开目录树。
+标准目录结构、目录职责、文件命名和版本管理规则统一维护在 [02_project_structure.md](docs/02_project_structure.md)。项目根目录必须包含 `project.yaml`、`.harness/`、`schemas/` 和 `templates/`，本文档不重复展开目录树。
 
 ## 5. 最低执行要求
 
@@ -96,6 +100,7 @@ agent.md
 - 有已确认的 `docs/analysis_framework.md`。
 - 有已确认的 `reports/final/final_report_structure.md`。
 - 有 `notebooks/main_analysis.ipynb`。
+- `project.yaml` 已通过 Schema 校验，Notebook 章节与配置一致。
 - 主 Notebook 可以从上到下顺序执行。
 - 主 Notebook 每个主要步骤都有 Markdown 备注。
 - 数据来源、时间范围、统计粒度和核心指标口径已说明。
@@ -108,6 +113,7 @@ agent.md
 - 关键图表和结果表已导出到 `reports/`。
 - 最终报告由脚本生成，默认只呈现结果、图表、表格、口径和限制。
 - 不包含真实数据库密码、密钥、token 或敏感明细数据。
+- 最近一次无界面 Notebook 执行通过，交付审计没有失败项。
 
 完整检查清单见：[08_reproducibility_audit_checklists.md](docs/08_reproducibility_audit_checklists.md)。
 

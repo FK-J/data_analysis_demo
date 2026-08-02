@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 from pathlib import Path
+import sys
 from typing import Any
 
 try:
@@ -23,6 +24,13 @@ except ImportError as exc:  # pragma: no cover
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.project_harness.config import validate_against_schema
+from src.project_harness.status import update_status
+
+
 DEFAULT_INPUT = PROJECT_ROOT / "reports" / "final" / "report_inputs.yaml"
 DEFAULT_OUTPUT = PROJECT_ROOT / "reports" / "final" / "final_analysis_report.md"
 
@@ -49,6 +57,12 @@ def load_report_inputs(input_path: Path) -> dict[str, Any]:
 
     if not isinstance(data, dict):
         raise ValueError("Report input YAML must contain a top-level mapping.")
+
+    validate_against_schema(
+        data,
+        PROJECT_ROOT / "schemas" / "report_inputs.schema.yaml",
+        label="report inputs",
+    )
 
     return data
 
@@ -198,6 +212,7 @@ def main() -> None:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report, encoding="utf-8")
+    update_status(PROJECT_ROOT, current_stage="reported", completed_stage="reported")
     print(f"Generated final report: {output_path}")
 
 

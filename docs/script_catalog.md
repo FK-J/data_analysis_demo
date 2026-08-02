@@ -17,11 +17,116 @@
 
 | 脚本 | 功能 | 常用命令 | 是否可单独运行 |
 | --- | --- | --- | --- |
+| `scripts/init_project.py` | 从模板初始化具体分析项目 | `python scripts/init_project.py --help` | 是 |
+| `scripts/generate_notebook.py` | 根据项目契约生成主 Notebook 骨架 | `python scripts/generate_notebook.py` | 是 |
+| `scripts/validate_project.py` | 检查结构、配置、Notebook、SQL 和安全规则 | `python scripts/validate_project.py` | 是 |
+| `scripts/run_notebook.py` | 在干净内核中执行主 Notebook 并保存证据 | `python scripts/run_notebook.py` | 是 |
+| `scripts/audit_project.py` | 审计执行证据和预期交付物 | `python scripts/audit_project.py` | 是 |
 | `scripts/generate_final_report.py` | 根据结构化输入生成最终分析报告 | `python scripts/generate_final_report.py` | 是 |
 
 ## 3. 脚本详情
 
-### 3.1 `scripts/generate_final_report.py`
+### 3.1 `scripts/init_project.py`
+
+**功能：** 从当前模板复制并初始化一个具体的数据分析项目。
+
+**默认输入：** 当前模板目录，以及必填参数 `--output`、`--name`、`--display-name`。
+
+**默认输出：** `--output` 指定的新项目目录，包括项目契约、确认文档和按配置生成的主 Notebook。
+
+**常用命令：**
+
+```bash
+python scripts/init_project.py --output ../new_analysis_project --name new_analysis_project --display-name "新数据分析项目"
+```
+
+**是否必须由 Notebook 调用：** 否，仅用于项目初始化。
+
+**是否会写文件：** 会创建新项目目录；目标目录已存在且非空时不得覆盖。
+
+**安全与注意事项：** `--output` 应位于模板仓库之外，初始化后仍需人工确认业务分析框架和报告结构。
+
+### 3.2 `scripts/generate_notebook.py`
+
+**功能：** 根据 `project.yaml` 和 `templates/notebook_sections.yaml` 生成主 Notebook 骨架。
+
+**默认输入：** 项目根目录下的项目契约和章节模板。
+
+**默认输出：** `project.yaml` 中 `runtime.notebook` 指定的 Notebook。
+
+**常用命令：**
+
+```bash
+python scripts/generate_notebook.py
+```
+
+**是否必须由 Notebook 调用：** 否，仅用于初始化或已审阅影响的结构调整。
+
+**是否会写文件：** 会覆盖目标 Notebook。
+
+**安全与注意事项：** 正式分析后重新生成前必须登记变更并审阅覆盖影响。
+
+### 3.3 `scripts/validate_project.py`
+
+**功能：** 校验项目契约、必需路径、Notebook 章节、占位内容、只读 SQL、安全文件和报告输入。
+
+**默认输入：** 当前项目目录。
+
+**默认输出：** 终端检查结果；传入 `--json-output` 时额外写入 JSON 报告。
+
+**常用命令：**
+
+```bash
+python scripts/validate_project.py
+```
+
+**是否必须由 Notebook 调用：** 否，属于 Notebook 外围质量门禁。
+
+**是否会写文件：** 默认不会；仅在指定 `--json-output` 时写文件。
+
+**安全与注意事项：** 检查通过不替代业务口径和分析结果的人工复核。
+
+### 3.4 `scripts/run_notebook.py`
+
+**功能：** 先执行项目预检，再在干净内核中从头运行主 Notebook 并保存复现证据。
+
+**默认输入：** `project.yaml` 指定的主 Notebook。
+
+**默认输出：** `logs/runs/<run_id>/executed_main_analysis.ipynb` 和 `manifest.json`。
+
+**常用命令：**
+
+```bash
+python scripts/run_notebook.py
+```
+
+**是否必须由 Notebook 调用：** 否，属于正式复现门禁。
+
+**是否会写文件：** 会写入执行副本和运行清单。
+
+**安全与注意事项：** 无界面执行不替代分析师的交互分析；失败时仍保留运行清单用于定位。
+
+### 3.5 `scripts/audit_project.py`
+
+**功能：** 审计最近一次 Notebook 执行证据和项目声明的交付物。
+
+**默认输入：** 项目契约、运行清单及 `reports/` 下的交付文件。
+
+**默认输出：** `logs/audit_report.json`。
+
+**常用命令：**
+
+```bash
+python scripts/audit_project.py
+```
+
+**是否必须由 Notebook 调用：** 否，属于交付审计门禁。
+
+**是否会写文件：** 会写入审计报告；具体项目通过审计后还会更新本地 Harness 状态。
+
+**安全与注意事项：** 必须在成功完成无界面 Notebook 运行后执行。
+
+### 3.6 `scripts/generate_final_report.py`
 
 **功能：** 根据 `reports/final/report_inputs.yaml` 生成结果呈现型最终分析报告。
 

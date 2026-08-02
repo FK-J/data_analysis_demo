@@ -8,7 +8,18 @@
 project/
   agent.md
   README.md
+  project.yaml
   .env.example
+  .harness/
+    workflow.yaml
+    status.template.yaml
+  schemas/
+    project.schema.yaml
+    report_inputs.schema.yaml
+    run_manifest.schema.yaml
+    status.schema.yaml
+  templates/
+    notebook_sections.yaml
   docs/
     analysis_framework.md
     framework_issue_log.md
@@ -32,6 +43,7 @@ project/
     transform/
     validation/
   src/
+    project_harness/
     db/
       connection.py
       sql_runner.py
@@ -47,6 +59,11 @@ project/
   notebooks/
     main_analysis.ipynb
   scripts/
+    init_project.py
+    generate_notebook.py
+    validate_project.py
+    run_notebook.py
+    audit_project.py
     generate_final_report.py
   reports/
     figures/
@@ -61,6 +78,10 @@ project/
 ## 2. 目录职责
 
 - `agent.md`：项目规范入口和文档目录。
+- `project.yaml`：项目类型、数据源、可选模块、交付物和运行路径的结构化契约。
+- `.harness/`：项目阶段定义和本地运行状态模板；`.harness/status.yaml` 为本地状态，不提交 Git。
+- `schemas/`：项目配置、报告输入和运行清单的机器校验规则。
+- `templates/notebook_sections.yaml`：按项目配置组合主 Notebook 的章节模板。
 - `docs/`：细节规范文档、业务分析框架和报告模板。
 - `docs/analysis_framework.md`：具体项目的业务分析框架，正式分析前必须与用户确认。
 - `docs/framework_issue_log.md`：记录框架、模板、工具或流程缺陷及改进建议，并关联 `change_id`。
@@ -82,9 +103,15 @@ project/
 - `sql/transform/`：数据转换 SQL。
 - `sql/validation/`：数据校验 SQL。
 - `src/`：可复用 Python 脚本。
+- `src/project_harness/`：项目初始化、Notebook 生成、配置校验、无界面执行、状态和审计内核。
 - `notebooks/main_analysis.ipynb`：唯一主分析 Notebook，必须完整执行全流程。
 - `scripts/generate_final_report.py`：固定生成最终报告的脚本，默认只呈现结果。
 - `scripts/`：可直接执行的功能脚本目录。新增、删除、重命名或修改脚本时，必须同步更新 `docs/script_catalog.md`。
+- `scripts/init_project.py`：从模板初始化具体分析项目。
+- `scripts/generate_notebook.py`：根据 `project.yaml` 生成主 Notebook 骨架。
+- `scripts/validate_project.py`：执行结构、配置、Notebook、SQL 和安全门禁。
+- `scripts/run_notebook.py`：在干净内核中执行主 Notebook 并保存运行清单。
+- `scripts/audit_project.py`：检查执行证据和交付产物。
 - `reports/figures/`：图表文件。
 - `reports/tables/`：结果表文件。
 - `reports/final/`：最终报告结构、报告输入素材、最终报告和交付材料。
@@ -265,6 +292,10 @@ logs/
 project/
   agent.md
   README.md
+  project.yaml
+  .harness/
+  schemas/
+  templates/
   docs/
     analysis_framework.md
     framework_issue_log.md

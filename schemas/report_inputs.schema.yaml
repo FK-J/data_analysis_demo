@@ -1,0 +1,43 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Final report inputs
+type: object
+required: [project, summary, business_questions, appendix]
+properties:
+  project:
+    type: object
+    required: [name, report_title, analysis_framework_path, report_structure_path, notebook_path]
+  summary:
+    type: object
+    required: [section_goal, key_results, metrics, figures, tables]
+  business_questions:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      required: [id, title, section_goal, analysis_logic, key_results, figures, tables, notes]
+      properties:
+        id:
+          type: string
+          pattern: '^Q[1-9][0-9]*$'
+        figures:
+          type: array
+          items: {$ref: '#/$defs/asset'}
+        tables:
+          type: array
+          items: {$ref: '#/$defs/asset'}
+  appendix:
+    type: object
+    required: [data_scope, metric_definitions, output_files]
+  insights:
+    type: object
+    properties:
+      enabled: {type: boolean}
+      items: {type: array}
+$defs:
+  asset:
+    type: object
+    required: [title, path]
+    properties:
+      title: {type: string, minLength: 1}
+      path: {type: string, minLength: 1}
+      note: {type: string}

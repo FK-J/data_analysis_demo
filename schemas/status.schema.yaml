@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Local project workflow status
+type: object
+additionalProperties: false
+required:
+  - schema_version
+  - project_name
+  - current_stage
+  - last_run_id
+  - last_run_status
+  - updated_at
+  - completed_stages
+  - remaining_risks
+properties:
+  schema_version: {const: 1}
+  project_name: {type: string, minLength: 1}
+  current_stage:
+    enum: [discovery, spec_confirmed, data_ready, quality_passed, analyzed, validated, reported, audited]
+  last_run_id:
+    type: [string, 'null']
+  last_run_status:
+    type: [string, 'null']
+    enum: [running, passed, failed, null]
+  updated_at:
+    type: [string, 'null']
+  completed_stages:
+    type: array
+    uniqueItems: true
+    items:
+      enum: [discovery, spec_confirmed, data_ready, quality_passed, analyzed, validated, reported, audited]
+  remaining_risks:
+    type: array
+    items: {type: string}

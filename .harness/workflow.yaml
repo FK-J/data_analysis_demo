@@ -1,0 +1,29 @@
+schema_version: 1
+
+stages:
+  - id: discovery
+    label: 需求与项目配置
+    requires: [project.yaml]
+  - id: spec_confirmed
+    label: 分析框架与报告结构确认
+    requires:
+      - docs/analysis_framework.md
+      - reports/final/final_report_structure.md
+  - id: data_ready
+    label: 数据可访问且口径已说明
+    requires: [notebooks/main_analysis.ipynb]
+  - id: quality_passed
+    label: 数据质量检查通过
+    requires: [reports/tables/data_quality_summary.csv]
+  - id: analyzed
+    label: 核心业务问题分析完成
+    requires: [reports/final/report_inputs.yaml]
+  - id: validated
+    label: Notebook 无界面复现通过
+    requires: []
+  - id: reported
+    label: 最终报告已生成
+    requires: [reports/final/final_analysis_report.md]
+  - id: audited
+    label: 交付审计通过
+    requires: []

@@ -53,17 +53,42 @@ docs/change_execution_log.md
 
 ## 1. 初始化新项目
 
-本节只说明从模板仓库复制到具体项目后的初始化文件操作；完整分析推进顺序以上方“新做分析项目工作流”为准。
+本节只说明从模板仓库生成具体项目的初始化操作；完整分析推进顺序以上方“新做分析项目工作流”为准。优先使用初始化脚本：
 
-1. 复制本模板到新项目目录。
-2. 修改 `configs/analysis_config.yaml` 中的项目名称、时区、随机种子和默认数据源 profile。
-3. 参考 `docs/project_readme_template.md` 重写新项目 README。
-4. 删除不适用于当前项目的示例 SQL、占位说明或空目录说明。
-5. 在 `docs/change_execution_log.md` 中创建项目初始化记录。
-6. 保留 `docs/framework_issue_log.md`，用于记录框架、模板、工具和流程缺陷。
-7. 如调整 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
+```bash
+python scripts/init_project.py --output ../new_analysis_project --name new_analysis_project --display-name "新数据分析项目" --analysis-type business_analysis --data-source local_file
+```
 
-## 2. 确认业务分析框架
+初始化脚本会：
+
+1. 创建具体项目目录并排除模板仓库的 Git 和本地运行状态。
+2. 将 `project.yaml` 切换为 `project` 模式并应用项目类型预设。
+3. 创建 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`。
+4. 根据数据源、统计分析、建模和交付物开关组合主 Notebook 章节。
+
+生成后先参考 `docs/project_readme_template.md` 完善 README，在 `docs/change_execution_log.md` 创建项目初始化记录，并保留 `docs/framework_issue_log.md`。如调整 `scripts/` 下的可执行脚本，必须同步更新 `docs/script_catalog.md`。
+
+随后与用户讨论业务背景、决策目标、核心业务问题、业务拆解框架和分析边界，再完成两份确认文档。生成器不会替代这一步人工确认。
+
+## 2. 配置项目与 Notebook
+
+`project.yaml` 是项目结构化契约，负责描述：
+
+- 项目标识、显示名称和项目模式。
+- 分析类型与数据源类型。
+- 是否启用数据库、SQL、统计分析和机器学习。
+- 是否需要图表、结果表、最终报告和洞察。
+- Notebook、配置和报告文件路径。
+
+修改配置后，可以重新生成 Notebook 骨架：
+
+```bash
+python scripts/generate_notebook.py
+```
+
+重新生成会覆盖主 Notebook，因此只适用于初始化阶段，或已经确认并审阅覆盖影响的结构调整。正式分析代码和解释应及时沉淀到 `src/`、SQL、分析框架和报告素材中。
+
+## 3. 确认业务分析框架
 
 业务分析框架是正式分析前必须确认的业务文档，不是指标口径表。
 
@@ -82,7 +107,7 @@ docs/change_execution_log.md
 
 如果用户提出新的分析需求，必须先判断是否影响 `docs/analysis_framework.md`。如果影响，应先更新框架文档，再同步 Notebook、SQL、Python 和报告。
 
-## 3. 确认最终报告结构
+## 4. 确认最终报告结构
 
 最终报告结构用于在分析前确认最终结果如何呈现。它应基于：
 
@@ -107,7 +132,7 @@ reports/final/final_report_structure.md
 
 该文件只确认最终报告呈现内容，不负责生成洞察。
 
-## 4. 配置数据源
+## 5. 配置数据源
 
 如果使用数据库：
 
@@ -122,7 +147,7 @@ reports/final/final_report_structure.md
 2. 在 Notebook 中说明数据来源、时间范围、粒度和字段含义。
 3. 不需要真实数据库配置时，在 Notebook 中标注数据库部分不适用。
 
-## 5. 编写分析流程
+## 6. 编写分析流程
 
 主流程必须通过 `notebooks/main_analysis.ipynb` 从上到下复现。
 
@@ -146,7 +171,15 @@ Notebook 必须基于 `docs/analysis_framework.md` 和 `reports/final/final_repo
 
 Notebook 负责串联流程、展示关键结果和记录业务解释。
 
-## 6. 维护脚本功能目录
+模板提供三个稳定扩展点：
+
+- `src.io.load_table`：读取本地表格文件。
+- `src.quality.build_quality_summary`：生成基础数据质量摘要。
+- `src.reporting.export_dataframe` 和 `write_report_inputs`：导出结果与报告素材。
+
+项目特有的复杂逻辑继续放入对应 `src/` 子目录，Notebook 只保留参数、调用、展示和解释。
+
+## 7. 维护脚本功能目录
 
 可直接执行脚本的功能和使用方式统一记录在：
 
@@ -163,7 +196,7 @@ docs/script_catalog.md
 - 修改脚本参数、默认输入、默认输出、写文件行为或安全边界。
 - 将原本只能由 Notebook 调用的逻辑改为可单独执行脚本。
 
-## 7. 输出交付物
+## 8. 输出交付物
 
 推荐输出路径：
 
@@ -216,7 +249,7 @@ reports/final/final_analysis_report.md
 python scripts/generate_final_report.py --with-insights
 ```
 
-## 8. 提交前检查
+## 9. 提交前检查
 
 提交前检查项统一维护在：
 
@@ -225,3 +258,13 @@ docs/08_reproducibility_audit_checklists.md
 ```
 
 本文档不重复维护检查清单。提交前至少应确认已按该文档完成项目完成检查、最低交付标准检查、禁止事项检查和交付前审计流程，并通过 `docs/09_change_management_standard.md` 的发布门禁。
+
+交付前还必须执行机器检查：
+
+```bash
+python scripts/validate_project.py
+python scripts/run_notebook.py
+python scripts/audit_project.py
+```
+
+无界面执行不会替代分析师对 Notebook 的交互使用。它只验证 Notebook 不依赖历史 Cell 状态、个人路径或未记录的手动操作。

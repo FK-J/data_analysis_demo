@@ -1,0 +1,92 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Data analysis project configuration
+type: object
+additionalProperties: false
+required:
+  - schema_version
+  - project
+  - data
+  - modules
+  - deliverables
+  - runtime
+  - paths
+properties:
+  schema_version:
+    const: 1
+  project:
+    type: object
+    additionalProperties: false
+    required: [name, display_name, mode, analysis_type, timezone]
+    properties:
+      name:
+        type: string
+        pattern: '^[a-z][a-z0-9_]*$'
+      display_name:
+        type: string
+        minLength: 1
+      mode:
+        enum: [template, project]
+      analysis_type:
+        enum: [business_analysis, statistical_analysis, machine_learning, custom]
+      timezone:
+        type: string
+        minLength: 1
+  data:
+    type: object
+    additionalProperties: false
+    required: [source_type, sensitive]
+    properties:
+      source_type:
+        enum: [local_file, database, mixed]
+      sensitive:
+        type: boolean
+  modules:
+    type: object
+    additionalProperties: false
+    required: [database, sql, statistics, modeling]
+    properties:
+      database: {type: boolean}
+      sql: {type: boolean}
+      statistics: {type: boolean}
+      modeling: {type: boolean}
+  deliverables:
+    type: object
+    additionalProperties: false
+    required: [figures, tables, final_report, insights]
+    properties:
+      figures: {type: boolean}
+      tables: {type: boolean}
+      final_report: {type: boolean}
+      insights: {type: boolean}
+  runtime:
+    type: object
+    additionalProperties: false
+    required:
+      - analysis_config
+      - notebook
+      - notebook_kernel
+      - notebook_timeout_seconds
+    properties:
+      analysis_config: {$ref: '#/$defs/relativePath'}
+      notebook: {$ref: '#/$defs/relativePath'}
+      notebook_kernel:
+        type: string
+        minLength: 1
+      notebook_timeout_seconds:
+        type: integer
+        minimum: 1
+  paths:
+    type: object
+    additionalProperties: false
+    required: [analysis_framework, report_structure, report_inputs, final_report]
+    properties:
+      analysis_framework: {$ref: '#/$defs/relativePath'}
+      report_structure: {$ref: '#/$defs/relativePath'}
+      report_inputs: {$ref: '#/$defs/relativePath'}
+      final_report: {$ref: '#/$defs/relativePath'}
+$defs:
+  relativePath:
+    type: string
+    minLength: 1
+    not:
+      pattern: '^(?:[A-Za-z]:[\\/]|/)'

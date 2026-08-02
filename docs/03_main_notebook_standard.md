@@ -23,29 +23,34 @@ Notebook 不应承担大量底层函数定义。复杂逻辑必须下沉到 `src
 
 数据分析通常不是一次从头到尾完成的线性工作。Notebook 必须支持分析师围绕某个中间步骤局部调试、调整逻辑并继续运行；变更验证时必须运行到最远受影响正式产物，正式发布按 `docs/09_change_management_standard.md` 执行完整运行。
 
-## 2. Notebook 必须包含的章节
+## 2. Notebook 章节生成规则
 
-主 Notebook 必须按以下顺序组织：
+主 Notebook 基于 `templates/notebook_sections.yaml` 生成，章节开关由 `project.yaml` 控制。所有项目必须包含以下核心章节：
 
 ```text
 1. 分析框架确认
 2. 环境、依赖与配置加载
-3. 数据库连接与 SQL 执行说明
-4. 数据源与字段理解
-5. 数据加载
-6. 数据质量检查
-7. 数据清洗与转换
-8. 探索性数据分析
-9. 业务问题分析
-10. 统计分析，如适用
-11. 机器学习建模，如适用
-12. 结果验证与稳健性检查
-13. 图表、表格和报告输入素材导出
-14. 最终报告脚本生成
-15. 项目完成检查清单
+3. 数据源与字段理解
+4. 数据加载
+5. 数据质量检查
+6. 数据清洗与转换
+7. 探索性数据分析
+8. 核心业务问题分析
+9. 结果验证与稳健性检查
+10. 图表、表格和报告输入素材导出
+11. 项目完成检查
 ```
 
-如果某一章节不适用于当前项目，必须在 Notebook 中说明“不适用”的原因。
+以下章节只在对应配置启用时生成：
+
+| 章节 | 配置条件 |
+| --- | --- |
+| 数据库连接与 SQL 执行 | `modules.database: true` |
+| 统计分析 | `modules.statistics: true` |
+| 机器学习建模 | `modules.modeling: true` |
+| 最终报告生成 | `deliverables.final_report: true` |
+
+不适用章节不进入生成结果，原因由 `project.yaml` 记录。修改配置后可运行 `python scripts/generate_notebook.py` 重新生成骨架，但正式分析阶段必须先确认覆盖影响。
 
 ## 3. Notebook 备注规范
 
@@ -142,7 +147,7 @@ Notebook 应负责组织流程和呈现结果，不应堆积大量函数定义�
 
 ## 6. 主 Notebook 骨架维护
 
-主 Notebook 的可执行骨架以实际文件为准：
+主 Notebook 的标准骨架以 `templates/notebook_sections.yaml` 为唯一来源，`notebooks/main_analysis.ipynb` 是根据 `project.yaml` 生成的实际执行入口：
 
 ```text
 notebooks/main_analysis.ipynb

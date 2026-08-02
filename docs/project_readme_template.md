@@ -81,13 +81,17 @@ python scripts/generate_final_report.py --with-insights
 ## 7. 项目结构
 
 ```text
+project.yaml   项目类型、模块、交付物和路径契约
+.harness/      工作阶段与本地状态模板
+schemas/       配置、报告输入和运行清单 Schema
+templates/     可组合 Notebook 章节模板
 configs/      项目配置
 data/         数据分层目录
 sql/          SQL 文件
 src/          Python 可复用逻辑
 notebooks/    主分析 Notebook
 reports/      图表、结果表和最终报告
-scripts/      报告生成脚本
+scripts/      项目生成、验证、复现、审计和报告脚本
 tests/        测试与校验
 logs/         运行日志
 ```
@@ -116,6 +120,18 @@ pip install -r requirements.txt
 configs/analysis_config.yaml
 ```
 
+项目结构化契约位于：
+
+```text
+project.yaml
+```
+
+如在初始化阶段修改了数据源、统计或建模模块，可重新生成 Notebook 骨架：
+
+```bash
+python scripts/generate_notebook.py
+```
+
 ## 10. 运行方式
 
 开发调试时可以打开并局部运行：
@@ -137,6 +153,14 @@ docs/script_catalog.md
 ```
 
 新增、删除、重命名或修改 `scripts/` 下的脚本时，必须同步更新该文档。
+
+交付前完成自动复现和审计：
+
+```bash
+python scripts/validate_project.py
+python scripts/run_notebook.py
+python scripts/audit_project.py
+```
 
 ## 11. 输出文件
 

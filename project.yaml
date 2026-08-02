@@ -1,0 +1,36 @@
+schema_version: 1
+
+project:
+  name: data_analysis_project
+  display_name: 数据分析项目
+  mode: template
+  analysis_type: business_analysis
+  timezone: Asia/Shanghai
+
+data:
+  source_type: local_file
+  sensitive: false
+
+modules:
+  database: false
+  sql: false
+  statistics: false
+  modeling: false
+
+deliverables:
+  figures: true
+  tables: true
+  final_report: true
+  insights: false
+
+runtime:
+  analysis_config: configs/analysis_config.yaml
+  notebook: notebooks/main_analysis.ipynb
+  notebook_kernel: python3
+  notebook_timeout_seconds: 600
+
+paths:
+  analysis_framework: docs/analysis_framework.md
+  report_structure: reports/final/final_report_structure.md
+  report_inputs: reports/final/report_inputs.yaml
+  final_report: reports/final/final_analysis_report.md

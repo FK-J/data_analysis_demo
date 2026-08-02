@@ -1,0 +1,491 @@
+schema_version: 1
+
+sections:
+  - id: overview
+    numbered: false
+    cells:
+      - type: markdown
+        source: |
+          # {project_name}
+
+          本 Notebook 是项目的唯一主分析入口，也是面向数据分析师的交互式分析与叙事文档。
+
+          Notebook 负责串联流程、展示关键结果和记录解释；复杂且可复用的读取、清洗、校验、分析、建模、绘图和导出逻辑应保存在 `src/`，并由本 Notebook 调用。
+
+          日常分析允许围绕当前步骤局部调试；变更验证必须运行到最远受影响产物，正式交付前必须在干净内核中从头顺序执行。
+
+  - id: analysis_framework
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 分析框架确认
+
+          **目的：**
+          确认本次分析基于 `docs/analysis_framework.md` 中已经与用户对齐的业务分析框架。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          业务背景、决策目标、核心业务问题、分析路径、业务假设和分析边界。
+
+          **处理逻辑：**
+          后续内容按业务问题组织。需求变化时，先更新分析框架和报告结构，再修改 Notebook、SQL 或 Python 模块。
+
+          **输出文件/对象：**
+          已确认的分析范围和业务问题编号。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          模板仓库只提供框架模板；具体项目必须完成并确认正式分析框架。
+
+  - id: environment
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 环境、依赖与配置加载
+
+          **目的：**
+          加载 `project.yaml`、分析运行参数和项目路径，并设置可复现的随机种子。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          `project.yaml` 与 `configs/analysis_config.yaml`。
+
+          **处理逻辑：**
+          调用 `src.project_harness.prepare_notebook_context` 完成配置校验和运行环境准备。
+
+          **输出文件/对象：**
+          `PROJECT_ROOT`、`project_config`、`analysis_config` 和 `RANDOM_SEED`。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          `project.yaml` 是项目结构和能力的唯一契约；数据库凭据仍只保存在被忽略的私有配置中。
+      - type: code
+        metadata:
+          tags: [harness-runtime]
+        source: |
+          from pathlib import Path
+          import sys
+
+          PROJECT_ROOT = Path.cwd().parent if Path.cwd().name == "notebooks" else Path.cwd()
+          PROJECT_ROOT = PROJECT_ROOT.resolve()
+          if str(PROJECT_ROOT) not in sys.path:
+              sys.path.insert(0, str(PROJECT_ROOT))
+
+          from src.project_harness import prepare_notebook_context
+
+          context = prepare_notebook_context(PROJECT_ROOT)
+          project_config = context["project_config"]
+          analysis_config = context["analysis_config"]
+          RANDOM_SEED = context["random_seed"]
+
+          {
+              "project": project_config["project"]["display_name"],
+              "analysis_type": project_config["project"]["analysis_type"],
+              "random_seed": RANDOM_SEED,
+          }
+
+  - id: database
+    requires: [modules.database]
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 数据库连接与 SQL 执行
+
+          **目的：**
+          通过固定 profile 建立数据库连接，并从 `sql/` 执行可追溯的只读查询。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          `configs/database.yaml`、`configs/analysis_config.yaml` 和 SQL 文件。
+
+          **处理逻辑：**
+          连接和 SQL 执行逻辑统一调用 `src.db`，Notebook 只负责选择 profile、传参和展示结果。
+
+          **输出文件/对象：**
+          数据库连接检查结果、查询 DataFrame 和执行元数据。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          默认只读。写库、建表、删表、更新或覆盖操作必须先获得用户明确确认。
+      - type: code
+        source: |
+          from src.db.connection import create_engine_from_profile, test_connection
+          from src.db.sql_runner import run_query_with_metadata
+
+          DATABASE_CONFIG_PATH = PROJECT_ROOT / "configs" / "database.yaml"
+          DATABASE_PROFILE = analysis_config["analysis"].get("database_profile")
+
+          # 确认私有数据库配置后再取消注释。
+          # engine = create_engine_from_profile(DATABASE_CONFIG_PATH, profile=DATABASE_PROFILE)
+          # test_connection(engine)
+
+  - id: data_source
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 数据源与字段理解
+
+          **目的：**
+          说明数据来源、表或文件、字段含义、主外键、时间范围、统计粒度和核心口径。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          数据字典、源表结构、文件说明和已确认的业务口径。
+
+          **处理逻辑：**
+          先确认数据能否支持每个业务问题，再进入正式读取和计算。
+
+          **输出文件/对象：**
+          数据范围说明、字段说明和指标口径记录。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          禁止在未说明粒度和过滤条件的情况下输出核心指标。
+
+  - id: data_loading
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 数据加载
+
+          **目的：**
+          使用 `src/io/` 或 `src/db/` 中的函数加载 SQL 查询结果或本地数据文件。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          数据库查询、`data/raw/` 或 `data/external/`。
+
+          **处理逻辑：**
+          Notebook 只传递路径和参数并展示抽样结果，通用读取逻辑下沉到 `src/`。
+
+          **输出文件/对象：**
+          原始分析 DataFrame 及行列数、字段类型等基础信息。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          不得手动修改 `data/raw/`，不得在输出中暴露敏感明细。
+      - type: code
+        source: |
+          from src.io import load_table
+
+          # 示例：根据项目数据源填写路径并取消注释。
+          # raw_df = load_table(PROJECT_ROOT / "data" / "raw" / "source.csv")
+          # raw_df.shape
+
+  - id: data_quality
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 数据质量检查
+
+          **目的：**
+          检查缺失、重复、主键、枚举值、时间范围、异常值和 join 后数据量变化。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          已加载的原始数据和业务校验规则。
+
+          **处理逻辑：**
+          将可复用检查封装在 `src/quality/`，Notebook 调用后展示关键检查结果。
+
+          **输出文件/对象：**
+          `reports/tables/data_quality_summary.csv` 和必要的异常明细摘要。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          任何删除、过滤、填补和去重都必须记录规则及影响行数。
+      - type: code
+        source: |
+          from src.quality import build_quality_summary
+          from src.reporting import export_dataframe
+
+          # quality_summary = build_quality_summary(raw_df, primary_key="id")
+          # export_dataframe(
+          #     quality_summary,
+          #     PROJECT_ROOT / "reports" / "tables" / "data_quality_summary.csv",
+          # )
+          # quality_summary
+
+  - id: cleaning
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 数据清洗与转换
+
+          **目的：**
+          执行可复现的数据清洗、字段转换和分析宽表构建。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          原始数据、质量检查结果和已确认的清洗规则。
+
+          **处理逻辑：**
+          调用 `src/cleaning/` 和 `src/features/` 中的项目函数；Notebook 展示调用顺序和关键中间结果。
+
+          **输出文件/对象：**
+          `data/interim/` 或 `data/processed/` 下的中间及最终分析数据。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          清洗规则必须有业务含义，禁止静默删除大量数据。
+
+  - id: exploratory_analysis
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 探索性数据分析
+
+          **目的：**
+          围绕业务问题理解分布、趋势、差异、异常和潜在假设。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          清洗后的分析数据。
+
+          **处理逻辑：**
+          在 Notebook 中交互探索；稳定、重复使用的指标与绘图函数分别沉淀到 `src/analysis/` 和 `src/visualization/`。
+
+          **输出文件/对象：**
+          支撑后续业务问题分析的中间发现和候选图表。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          图表必须服务于问题，不以展示技术为目的堆砌图表。
+
+  - id: business_analysis
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 核心业务问题分析
+
+          **目的：**
+          按 `Q1`、`Q2`、`Q3` 等已确认业务问题逐项完成分析。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          清洗后的数据、业务分析框架、指标口径和业务假设。
+
+          **处理逻辑：**
+          每个问题按“判断标准、计算结果、证据、解释、限制”组织，而不是按代码执行顺序组织。
+
+          **输出文件/对象：**
+          每个业务问题对应的关键结果、图表、结果表和口径说明。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          事实、推断、建议和局限性必须分离；相关性不得直接解释为因果性。
+
+  - id: statistical_analysis
+    requires: [modules.statistics]
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 统计分析
+
+          **目的：**
+          使用统计方法验证假设、量化差异或表达不确定性。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          分析数据、业务假设和方法选择依据。
+
+          **处理逻辑：**
+          将稳定的检验或估计函数放入 `src/stats/`，Notebook 展示方法选择、参数和结果解释。
+
+          **输出文件/对象：**
+          统计量、效应量、置信区间、显著性结果和适用限制。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          必须区分统计显著性与业务显著性。
+
+  - id: modeling
+    requires: [modules.modeling]
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 机器学习建模
+
+          **目的：**
+          在存在明确预测、分类、聚类或排序需求时完成建模和评估。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          建模样本、标签、特征、数据切分方案和评估指标。
+
+          **处理逻辑：**
+          调用 `src/modeling/` 中的训练、评估和解释函数，Notebook 保留业务选择和结果展示。
+
+          **输出文件/对象：**
+          模型评估、稳定性结果、特征解释和适用边界。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          禁止数据泄漏，禁止为了建模而建模。
+
+  - id: robustness
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 结果验证与稳健性检查
+
+          **目的：**
+          判断核心结果是否受异常值、时间窗口、样本选择、指标口径或方法变化影响。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          核心结论、关键指标和统计或模型结果。
+
+          **处理逻辑：**
+          通过替代口径、时间窗口、样本或方法进行重复计算和对照。
+
+          **输出文件/对象：**
+          稳健性检查结果以及需要写入最终报告的限制。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          高度敏感或无法复核的结论不能作为确定性结论交付。
+
+  - id: export
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 图表、表格与报告素材导出
+
+          **目的：**
+          将关键图表、结果表和结构化报告素材保存到 `reports/`。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          已验证的分析结果、图表对象、结果 DataFrame 和报告结构。
+
+          **处理逻辑：**
+          导出逻辑应封装到 `src/reporting/`；Notebook 负责选择最终交付内容并调用导出函数。
+
+          **输出文件/对象：**
+          `reports/figures/`、`reports/tables/` 和 `reports/final/report_inputs.yaml`。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          关键结果不得只存在于 Notebook 的输出缓存中。
+      - type: code
+        source: |
+          from src.reporting import export_dataframe, write_report_inputs
+
+          REPORT_INPUTS_PATH = PROJECT_ROOT / project_config["paths"]["report_inputs"]
+          # report_inputs = {...}  # 结构参考 docs/report_inputs_template.yaml
+          # write_report_inputs(report_inputs, REPORT_INPUTS_PATH)
+
+  - id: final_report
+    requires: [deliverables.final_report]
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 最终报告生成
+
+          **目的：**
+          基于结构化报告素材生成结果呈现型最终报告。
+
+          **上游依赖：**
+          依赖前序章节已完成，并已确认相关配置、口径和输入对象。
+
+          **输入文件/对象：**
+          `reports/final/report_inputs.yaml` 和已经确认的报告结构。
+
+          **处理逻辑：**
+          在素材准备完成后运行 `python scripts/generate_final_report.py`。
+
+          **输出文件/对象：**
+          `reports/final/final_analysis_report.md`。
+
+          **是否可缓存：**
+          可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
+
+          **调试提示：**
+          默认不生成大模型洞察；只有用户明确要求时才允许显式启用预先准备的洞察内容。
+      - type: code
+        source: |
+          # 报告素材准备完成后再执行：
+          # %run scripts/generate_final_report.py
+
+  - id: completion
+    cells:
+      - type: markdown
+        source: |
+          ## {section_number}. 项目完成检查
+
+          **目的：**
+          确认当前变更已运行到最远受影响产物，并完成正式交付门禁。
+
+          **上游依赖：**
+          依赖全部受影响章节、输出文件和变更执行记录已经更新。
+
+          **输入文件/对象：**
+          `project.yaml`、主 Notebook、报告产物、运行日志和变更执行记录。
+
+          **输出文件/对象：**
+          无界面执行副本、运行清单、审计报告和已更新的变更状态。
+
+          **是否可缓存：**
+          验收结果不可跨变更复用；配置、代码、数据或交付物变化后必须重新检查。
+
+          **调试提示：**
+          交付前依次运行以下命令；未通过项必须修复，或记录原因、影响和剩余风险：
+
+          ```bash
+          python scripts/validate_project.py
+          python scripts/run_notebook.py
+          python scripts/audit_project.py
+          ```
