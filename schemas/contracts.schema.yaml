@@ -1,0 +1,91 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Project-owned decisions, data admission, metrics and evidence
+type: object
+additionalProperties: false
+required: [schema_version, decisions, sources, metrics, checks, report_requirements]
+properties:
+  schema_version: {const: 1}
+  decisions:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, decision, status, owner, evidence, resolve_by_stage, impact]
+      properties:
+        id: {$ref: '#/$defs/text'}
+        decision: {$ref: '#/$defs/text'}
+        status: {enum: [pending, confirmed, rejected]}
+        owner: {$ref: '#/$defs/text'}
+        evidence: {type: string}
+        resolve_by_stage: {enum: [spec_confirmed, data_ready, quality_passed, analyzed]}
+        impact: {$ref: '#/$defs/text'}
+  sources:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, grain, primary_key, missing_semantics, time_semantics, uses, status, reason, evidence]
+      properties:
+        id: {$ref: '#/$defs/text'}
+        path: {$ref: '#/$defs/text'}
+        grain: {$ref: '#/$defs/text'}
+        primary_key: {$ref: '#/$defs/strings'}
+        missing_semantics: {$ref: '#/$defs/text'}
+        time_semantics: {$ref: '#/$defs/text'}
+        uses: {$ref: '#/$defs/strings'}
+        status: {enum: [pending, usable, limited, excluded]}
+        reason: {type: string}
+        evidence: {type: string}
+  metrics:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, name, grain, population, numerator, denominator, time_window, version]
+      properties:
+        id: {$ref: '#/$defs/text'}
+        name: {$ref: '#/$defs/text'}
+        grain: {$ref: '#/$defs/text'}
+        population: {$ref: '#/$defs/text'}
+        numerator: {$ref: '#/$defs/text'}
+        denominator: {$ref: '#/$defs/text'}
+        time_window: {$ref: '#/$defs/text'}
+        version: {$ref: '#/$defs/text'}
+  checks:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, category, kind, table, description]
+      properties:
+        id: {$ref: '#/$defs/text'}
+        category: {enum: [data, analysis]}
+        kind: {enum: [unique, non_null, range, row_count, sum_equals, column_relation]}
+        table: {$ref: '#/$defs/text'}
+        description: {$ref: '#/$defs/text'}
+        keys: {$ref: '#/$defs/strings'}
+        column: {$ref: '#/$defs/text'}
+        other_table: {$ref: '#/$defs/text'}
+        other_column: {$ref: '#/$defs/text'}
+        min: {type: number}
+        max: {type: number}
+        expected: {type: number}
+        tolerance: {type: number, minimum: 0}
+        operator: {enum: [le, eq, ge]}
+  report_requirements:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, title, required]
+      properties:
+        id: {$ref: '#/$defs/text'}
+        title: {$ref: '#/$defs/text'}
+        required: {type: boolean}
+$defs:
+  text: {type: string, minLength: 1}
+  strings:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items: {$ref: '#/$defs/text'}

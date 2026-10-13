@@ -27,8 +27,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.project_harness.config import validate_against_schema
+from src.project_harness.config import ConfigError, resolve_project_path, validate_against_schema, validate_project_config
 from src.project_harness.status import update_status
+from src.project_harness.provenance import bind_report, latest_run, verify_run
+from src.project_harness.contracts import check_report_coverage, check_report_metrics, load_contracts
+from src.project_harness.validation import PLACEHOLDER_PATTERN, ValidationReport, format_report, validate_project
 
 
 DEFAULT_INPUT = PROJECT_ROOT / "reports" / "final" / "report_inputs.yaml"
@@ -43,7 +46,7 @@ def resolve_path(path: str | Path) -> Path:
     return resolved
 
 
-def load_report_inputs(input_path: Path) -> dict[str, Any]:
+def load_report_inputs(input_path: Path, *, project_root: Path = PROJECT_ROOT) -> dict[str, Any]:
     """Load report inputs from YAML."""
     if not input_path.exists():
         raise FileNotFoundError(
@@ -60,7 +63,7 @@ def load_report_inputs(input_path: Path) -> dict[str, Any]:
 
     validate_against_schema(
         data,
-        PROJECT_ROOT / "schemas" / "report_inputs.schema.yaml",
+        project_root / "schemas" / "report_inputs.schema.yaml",
         label="report inputs",
     )
 
@@ -94,6 +97,8 @@ def render_metrics(metrics: Any) -> list[str]:
     for item in rows:
         name = item.get("name", "")
         value = item.get("value", "")
+        if item.get("format") == "percent":
+            value = f"{float(value):.2%}"
         note = item.get("note", "")
         lines.append(f"| {name} | {value} | {note} |")
     return lines
@@ -148,6 +153,8 @@ def render_report(data: dict[str, Any], *, with_insights: bool) -> str:
         "",
     ]
 
+    if project.get("run_id"):
+        lines.insert(3, f"- 运行 ID：`{project['run_id']}`")
     lines.extend(["## 1. 汇总结果", ""])
     append_section(lines, "### 本节目标", [str(summary.get("section_goal", "汇总本次分析最重要的结果。"))])
     append_section(lines, "### 关键结果", render_bullets(summary.get("key_results")))
@@ -162,6 +169,8 @@ def render_report(data: dict[str, Any], *, with_insights: bool) -> str:
         append_section(lines, "### 本节目标", [str(question.get("section_goal", "待填写"))])
         append_section(lines, "### 具体分析逻辑", [str(question.get("analysis_logic", "待填写"))])
         append_section(lines, "### 关键结果", render_bullets(question.get("key_results")))
+        if question.get("metrics"):
+            append_section(lines, "### 核心指标", render_metrics(question["metrics"]))
         append_section(lines, "### 图表", render_assets(question.get("figures"), label="图表"))
         append_section(lines, "### 结果表", render_assets(question.get("tables"), label="结果表"))
         append_section(lines, "### 口径与限制", render_bullets(question.get("notes")))
@@ -184,14 +193,15 @@ def render_report(data: dict[str, Any], *, with_insights: bool) -> str:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate a result-only final analysis report.")
+    parser.add_argument("--project-root", default=str(PROJECT_ROOT))
     parser.add_argument(
         "--input",
-        default=str(DEFAULT_INPUT),
+        default=None,
         help="Path to report input YAML. Defaults to reports/final/report_inputs.yaml.",
     )
     parser.add_argument(
         "--output",
-        default=str(DEFAULT_OUTPUT),
+        default=None,
         help="Path to output Markdown report. Defaults to reports/final/final_analysis_report.md.",
     )
     parser.add_argument(
@@ -204,15 +214,41 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    input_path = resolve_path(args.input)
-    output_path = resolve_path(args.output)
+    root = Path(args.project_root).resolve()
+    config = validate_project_config(root)
+    input_path = resolve_project_path(root, args.input or config["paths"]["report_inputs"])
+    output_path = resolve_project_path(root, args.output or config["paths"]["final_report"])
+    if input_path != resolve_project_path(root, config["paths"]["report_inputs"]) or output_path != resolve_project_path(root, config["paths"]["final_report"]):
+        raise ConfigError("Declare custom report paths in project.yaml so the report remains auditable.")
+    if not config["deliverables"]["final_report"]:
+        raise ConfigError("Final report generation is disabled in project.yaml.")
+    preflight = validate_project(root, stage="analyzed")
+    print(format_report(preflight))
+    if not preflight.passed:
+        raise SystemExit(1)
+    run_checks = ValidationReport(verify_run(root, config))
+    if not run_checks.passed:
+        print(format_report(run_checks))
+        raise SystemExit(1)
 
-    data = load_report_inputs(input_path)
+    data = load_report_inputs(input_path, project_root=root)
+    contracts = load_contracts(root, config)
+    coverage = ValidationReport(check_report_coverage(root, config, contracts) + check_report_metrics(root, config, contracts))
+    if not coverage.passed:
+        print(format_report(coverage))
+        raise SystemExit(1)
+    if args.with_insights and not config["deliverables"]["insights"]:
+        raise ConfigError("Enable deliverables.insights before rendering requested insight text.")
+    _, manifest = latest_run(root)
+    data["project"]["run_id"] = manifest["run_id"]
     report = render_report(data, with_insights=bool(args.with_insights))
+    if PLACEHOLDER_PATTERN.search(report):
+        raise ConfigError("Rendered report contains unresolved placeholders; complete the report inputs first.")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(report, encoding="utf-8")
-    update_status(PROJECT_ROOT, current_stage="reported", completed_stage="reported")
+    bind_report(root, config, output_path)
+    update_status(root, current_stage="reported", completed_stage="reported")
     print(f"Generated final report: {output_path}")
 
 

@@ -8,6 +8,8 @@ reports/final/final_report_structure.md
 
 本文件回答“最终报告会长什么样、每一部分呈现什么结果、对应什么分析逻辑”。它不替代 `docs/analysis_framework.md`，而是把业务分析框架转化为最终报告结构。
 
+本文件承载表达方案；在 `configs/project_contracts.yaml` 的 `report_requirements` 中登记必需/选填主题及稳定 ID。最终报告素材通过 `coverage` 声明覆盖、缺失或不适用；覆盖需要证据文件，不适用需要业务依据。先审阅样张，再验收最终数字与证据。
+
 ## 1. 汇总结果
 
 ### 本节目标

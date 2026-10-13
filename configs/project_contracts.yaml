@@ -1,0 +1,17 @@
+# 项目内容：按业务填写。框架只校验声明与证据，不替用户确认业务事实。
+schema_version: 1
+decisions:
+  - id: D1
+    decision: 待填写分析单位、业务目标及交付范围的确认结论
+    status: pending
+    owner: 待填写确认人
+    evidence: ''
+    resolve_by_stage: spec_confirmed
+    impact: 待填写未解决时影响哪些分析
+sources: []
+metrics: []
+checks: []
+report_requirements:
+  - id: Q1
+    title: 待填写必须回答的业务问题
+    required: true

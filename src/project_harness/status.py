@@ -45,6 +45,12 @@ def update_status(
     root = Path(project_root).resolve()
     status = load_status(root)
     completed = list(status.get("completed_stages") or [])
+    if last_run_status == "running" and last_run_id != status.get("last_run_id"):
+        completed = []
+        status["current_stage"] = "discovery"
+    elif last_run_status == "failed":
+        completed = [item for item in completed if item not in {"validated", "reported", "audited"}]
+        status["current_stage"] = "analyzed" if "analyzed" in completed else "discovery"
     if completed_stage and completed_stage not in completed:
         completed.append(completed_stage)
 

@@ -9,21 +9,28 @@ stages:
     requires:
       - docs/analysis_framework.md
       - reports/final/final_report_structure.md
+    gates: [decisions]
   - id: data_ready
     label: 数据可访问且口径已说明
     requires: [notebooks/main_analysis.ipynb]
+    gates: [sources]
   - id: quality_passed
     label: 数据质量检查通过
-    requires: [reports/tables/data_quality_summary.csv]
+    requires: []
+    gates: [data_checks]
   - id: analyzed
     label: 核心业务问题分析完成
     requires: [reports/final/report_inputs.yaml]
+    gates: [metrics, analysis_checks]
   - id: validated
     label: Notebook 无界面复现通过
     requires: []
+    gates: [run_evidence]
   - id: reported
     label: 最终报告已生成
     requires: [reports/final/final_analysis_report.md]
+    gates: [report_coverage, report_metrics, report_binding]
   - id: audited
     label: 交付审计通过
     requires: []
+    gates: [delivery_artifacts]

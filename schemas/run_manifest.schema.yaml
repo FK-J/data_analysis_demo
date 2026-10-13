@@ -29,3 +29,10 @@ properties:
     type: [string, 'null']
   checks: {type: array}
   artifacts: {type: array}
+  input_fingerprints: {$ref: '#/$defs/fingerprints'}
+  output_fingerprints: {$ref: '#/$defs/fingerprints'}
+  report_fingerprints: {$ref: '#/$defs/fingerprints'}
+$defs:
+  fingerprints:
+    type: object
+    additionalProperties: {type: string, pattern: '^[a-f0-9]{64}$'}

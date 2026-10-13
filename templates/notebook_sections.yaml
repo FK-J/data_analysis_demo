@@ -21,7 +21,7 @@ sections:
           ## {section_number}. 分析框架确认
 
           **目的：**
-          确认本次分析基于 `docs/analysis_framework.md` 中已经与用户对齐的业务分析框架。
+          确认本次分析基于 `docs/analysis_framework.md`、`reports/final/final_report_structure.md` 和 `configs/project_contracts.yaml` 中的业务问题、交付要求及关键决策。
 
           **上游依赖：**
           依赖前序章节已完成，并已确认相关配置、口径和输入对象。
@@ -208,7 +208,7 @@ sections:
           已加载的原始数据和业务校验规则。
 
           **处理逻辑：**
-          将可复用检查封装在 `src/quality/`，Notebook 调用后展示关键检查结果。
+          在项目契约中登记来源粒度、缺失与时间语义及准入结论。执行项目声明的 data 检查，Notebook 展示关键结果；无记录不能自动解释为零。
 
           **输出文件/对象：**
           `reports/tables/data_quality_summary.csv` 和必要的异常明细摘要。
@@ -220,7 +220,7 @@ sections:
           任何删除、过滤、填补和去重都必须记录规则及影响行数。
       - type: code
         source: |
-          from src.quality import build_quality_summary
+          from src.quality import build_quality_summary, run_table_checks
           from src.reporting import export_dataframe
 
           # quality_summary = build_quality_summary(raw_df, primary_key="id")
@@ -229,6 +229,11 @@ sections:
           #     PROJECT_ROOT / "reports" / "tables" / "data_quality_summary.csv",
           # )
           # quality_summary
+
+          # from src.project_harness.contracts import load_contracts
+          # contracts = load_contracts(PROJECT_ROOT, project_config)
+          # data_checks = run_table_checks(PROJECT_ROOT, contracts["checks"], category="data")
+          # assert all(item.status == "pass" for item in data_checks), data_checks
 
   - id: cleaning
     cells:
@@ -445,7 +450,7 @@ sections:
           `reports/final/report_inputs.yaml` 和已经确认的报告结构。
 
           **处理逻辑：**
-          在素材准备完成后运行 `python scripts/generate_final_report.py`。
+          在正式无界面运行结束后于终端运行 `python scripts/generate_final_report.py`；生成器核对运行、指标引用和主题覆盖。
 
           **输出文件/对象：**
           `reports/final/final_analysis_report.md`。
@@ -457,8 +462,8 @@ sections:
           默认不生成大模型洞察；只有用户明确要求时才允许显式启用预先准备的洞察内容。
       - type: code
         source: |
-          # 报告素材准备完成后再执行：
-          # %run scripts/generate_final_report.py
+          # 本 Notebook 导出素材；正式运行结束后在终端生成并审计报告。
+          # 不在正在执行的 Notebook 内调用正式报告 CLI。
 
   - id: completion
     cells:
@@ -485,7 +490,8 @@ sections:
           交付前依次运行以下命令；未通过项必须修复，或记录原因、影响和剩余风险：
 
           ```bash
-          python scripts/validate_project.py
+          python scripts/validate_project.py --stage spec_confirmed
           python scripts/run_notebook.py
+          python scripts/generate_final_report.py
           python scripts/audit_project.py
           ```

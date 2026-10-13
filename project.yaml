@@ -30,6 +30,7 @@ runtime:
   notebook_timeout_seconds: 600
 
 paths:
+  contracts: configs/project_contracts.yaml
   analysis_framework: docs/analysis_framework.md
   report_structure: reports/final/final_report_structure.md
   report_inputs: reports/final/report_inputs.yaml

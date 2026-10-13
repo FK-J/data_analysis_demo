@@ -28,7 +28,7 @@
 
 ### 3.1 `scripts/init_project.py`
 
-**功能：** 从当前模板复制并初始化一个具体的数据分析项目。
+**功能：** 按 `.harness/template_files.yaml` 白名单初始化具体项目；重建项目 README、历史记录和主 Notebook，不复制业务新增文件及本地数据。
 
 **默认输入：** 当前模板目录，以及必填参数 `--output`、`--name`、`--display-name`。
 
@@ -68,7 +68,7 @@ python scripts/generate_notebook.py
 
 ### 3.3 `scripts/validate_project.py`
 
-**功能：** 校验项目契约、必需路径、Notebook 章节、占位内容、只读 SQL、安全文件和报告输入。
+**功能：** 校验项目契约、必需路径、Notebook 章节、占位内容、只读 SQL、安全文件和报告输入。新增 `--stage` 可检查指定阶段及之前的实质出口；不传时只做结构预检。
 
 **默认输入：** 当前项目目录。
 
@@ -88,7 +88,7 @@ python scripts/validate_project.py
 
 ### 3.4 `scripts/run_notebook.py`
 
-**功能：** 先执行项目预检，再在干净内核中从头运行主 Notebook 并保存复现证据。
+**功能：** 先校验 spec_confirmed，再在干净内核执行 Notebook；具体项目执行后检查 analyzed 出口。保存输入、代码、契约、产物指纹及运行 ID，失败也保存证据。
 
 **默认输入：** `project.yaml` 指定的主 Notebook。
 
@@ -108,7 +108,7 @@ python scripts/run_notebook.py
 
 ### 3.5 `scripts/audit_project.py`
 
-**功能：** 审计最近一次 Notebook 执行证据和项目声明的交付物。
+**功能：** 分工程、分析、报告类别审计阶段出口、最近一次正式运行及其内容指纹、报告覆盖和交付物。不把缺少分析检查视为通过。
 
 **默认输入：** 项目契约、运行清单及 `reports/` 下的交付文件。
 
@@ -128,12 +128,13 @@ python scripts/audit_project.py
 
 ### 3.6 `scripts/generate_final_report.py`
 
-**功能：** 根据 `reports/final/report_inputs.yaml` 生成结果呈现型最终分析报告。
+**功能：** 根据配置中的报告素材生成最终报告；生成前核对正式运行、覆盖和产物指纹，生成后绑定报告与运行 ID。支持 `--project-root`；自定义输入输出必须与 `project.yaml` 声明一致。
 
 **适用场景：** Notebook 已完成关键图表、结果表和报告输入素材导出后，生成最终交付报告。
 
 **默认输入：**
 
+- `project.yaml` 和最近一次成功且内容一致的正式运行。
 - `reports/final/report_inputs.yaml`
 - `reports/final/final_report_structure.md`
 
@@ -167,6 +168,7 @@ python scripts/generate_final_report.py --with-insights
 
 **安全与注意事项：**
 
+- 正式生成必须在无界面 Notebook 运行之后；不要在正在执行的 Notebook 内调用此 CLI。
 - 默认只呈现结果、图表、表格、口径和输出文件路径。
 - 默认不调用大模型，不自动生成洞察、归因或业务建议。
 - 只有显式传入 `--with-insights` 时，才会渲染 `report_inputs.yaml` 中已经写好的洞察文本。

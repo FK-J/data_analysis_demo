@@ -14,8 +14,15 @@ summary:
     - 待填写核心结果一。
     - 待填写核心结果二。
   metrics:
-    - name: 待填写指标
-      value: 待填写结果
+    - id: 待填写项目契约中的指标ID
+      name: 待填写指标
+      value: 0
+      format: number
+      source:
+        path: reports/tables/example.csv
+        column: 待填写结果表列名
+        row: 0
+        tolerance: 0
       note: 待填写口径说明
   figures:
     - title: 待填写图表标题
@@ -52,8 +59,12 @@ appendix:
   output_files:
     - reports/final/final_analysis_report.md
 
+coverage:
+  - id: Q1
+    status: missing
+    reason: 待填写实现或不适用原因
+
 insights:
   # 默认不渲染。只有运行脚本时显式传入 --with-insights 才会写入报告。
   enabled: false
-  items:
-    - 待填写可选洞察内容。脚本不会自动调用大模型生成本内容。
+  items: []

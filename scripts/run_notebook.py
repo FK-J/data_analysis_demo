@@ -24,7 +24,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    preflight = validate_project(args.project_root)
+    preflight = validate_project(args.project_root, stage="spec_confirmed")
     print(format_report(preflight))
     if not preflight.passed:
         print("Notebook execution stopped because preflight validation failed.")

@@ -1,5 +1,7 @@
 # 02. 项目目录与文件组织规范
 
+文件归属见 `framework_usage.md`：`src/project_harness/`、Schema、运行工具和通用规范由框架维护；项目配置、契约、Notebook 及业务模块由项目维护。初始化只复制 `.harness/template_files.yaml` 白名单，且重建项目历史。
+
 ## 1. 标准项目目录结构
 
 每个项目应该采用以下目录结构：

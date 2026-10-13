@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
+from copy import deepcopy
 from typing import Any
 
 import pandas as pd
@@ -32,6 +34,9 @@ def export_dataframe(
 
 def write_report_inputs(data: dict[str, Any], path: str | Path) -> Path:
     """Write structured report inputs prepared by the Notebook."""
+    data = deepcopy(data)
+    if os.environ.get("ANALYSIS_RUN_ID"):
+        data.setdefault("project", {})["run_id"] = os.environ["ANALYSIS_RUN_ID"]
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(

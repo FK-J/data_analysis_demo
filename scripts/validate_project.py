@@ -18,12 +18,14 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate a generated data analysis project.")
     parser.add_argument("--project-root", default=str(PROJECT_ROOT))
     parser.add_argument("--json-output", default=None, help="Optional path for the JSON validation report.")
+    parser.add_argument("--stage", choices=["discovery", "spec_confirmed", "data_ready", "quality_passed", "analyzed", "validated", "reported", "audited"], default=None,
+                        help="Evaluate this stage and its preceding exits. Omit for structural preflight only.")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    report = validate_project(args.project_root)
+    report = validate_project(args.project_root, stage=args.stage)
     print(format_report(report))
     if args.json_output:
         write_report(args.json_output, report)

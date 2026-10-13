@@ -69,6 +69,7 @@ properties:
     properties:
       analysis_config: {$ref: '#/$defs/relativePath'}
       notebook: {$ref: '#/$defs/relativePath'}
+      notebook_template: {$ref: '#/$defs/relativePath'}
       notebook_kernel:
         type: string
         minLength: 1
@@ -84,6 +85,7 @@ properties:
       report_structure: {$ref: '#/$defs/relativePath'}
       report_inputs: {$ref: '#/$defs/relativePath'}
       final_report: {$ref: '#/$defs/relativePath'}
+      contracts: {$ref: '#/$defs/relativePath'}
 $defs:
   relativePath:
     type: string

@@ -8,6 +8,9 @@
 
 默认执行原则：
 
+- 本仓库提供标准化分析流程；原始框架由维护者调整，使用者副本独立发展，不要求升级同步，也不新增方法选择索引。
+- 分析任务优先修改项目配置、契约和业务模块；不要用修改框架工具代替业务适配。确需个性化修改框架时，先明确修改范围、验证调整，再开展依赖它的分析。
+- 先阅读 `docs/framework_usage.md`，使用 `configs/project_contracts.yaml` 登记决策、数据准入、指标、检查规则和报告要求。业务意义由用户确认，框架只检查已声明的条件与证据。
 - 开始前必须读取并校验 `project.yaml`；它决定项目模式、数据源、可选 Notebook 章节和预期交付物。
 - 在正式读取数据、编写 SQL、建模或制图之前，必须先与用户确认业务分析框架。
 - 业务分析框架必须保存为 `docs/analysis_framework.md`，可基于 `docs/analysis_framework_template.md` 创建。
@@ -26,7 +29,7 @@
 - 可以通过 Python 直接连接数据库，但禁止硬编码真实账号、密码、密钥或生产库敏感配置。
 - Notebook 每个主要步骤必须写清楚目的、上游依赖、输入文件/对象、输出文件/对象、是否可缓存和调试提示。
 - 所有关键结果或结论必须可以追溯到数据、SQL、Python 脚本或 Notebook cell。
-- 最终报告必须通过 `scripts/generate_final_report.py` 生成，默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
+- 最终报告在正式 Notebook 运行结束后，通过 `scripts/generate_final_report.py` 生成并绑定运行 ID；不在正在执行的 Notebook 内调用正式报告 CLI。默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
 - 交付前必须依次通过 `scripts/validate_project.py`、`scripts/run_notebook.py` 和 `scripts/audit_project.py`。
 - 自动化脚本只用于生成与验收，不得绕过主 Notebook 形成第二套分析流程。
 
@@ -42,6 +45,7 @@
 
 | 文档 | 核心作用 | 不负责 |
 | --- | --- | --- |
+| [framework_usage.md](docs/framework_usage.md) | 框架与项目边界、完整使用步骤、自动化职责、阶段出口及项目契约说明。 | 不新增业务方法索引或升级同步机制。 |
 | [README.md](README.md) | 项目入口和快速导航，说明最少必读文件、常用命令和安全底线。 | 不展开完整工作流和细则。 |
 | [agent.md](agent.md) | Agent 执行入口，说明默认原则、文档职责和最低交付要求。 | 不替代各分册的详细规范。 |
 | [template_usage.md](docs/template_usage.md) | 工作流主文档，沉淀新做分析、中途修改需求和贯穿式问题记录流程。 | 不写具体项目的业务内容。 |
@@ -111,7 +115,7 @@ agent.md
 - 已发现的框架、模板、工具或流程缺陷已记录到 `docs/framework_issue_log.md` 并关联 `change_id`。
 - 变更已运行到最远受影响产物，检查项和剩余风险已记录。
 - 关键图表和结果表已导出到 `reports/`。
-- 最终报告由脚本生成，默认只呈现结果、图表、表格、口径和限制。
+- 启用最终报告时，由脚本生成并通过报告验收，默认只呈现结果、图表、表格、口径和限制。
 - 不包含真实数据库密码、密钥、token 或敏感明细数据。
 - 最近一次无界面 Notebook 执行通过，交付审计没有失败项。
 

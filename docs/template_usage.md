@@ -1,5 +1,7 @@
 # 模板使用说明
 
+完整操作步骤、用户与自动化职责见 `framework_usage.md`。项目契约统一位于 `configs/project_contracts.yaml`。使用者默认通过配置和业务模块适配需求；确需调整框架时先完成调整和验证，不在分析中静默修改通用工具。
+
 本文档说明如何把本仓库作为新数据分析项目模板使用。
 
 本文档沉淀三类核心入口：
@@ -264,6 +266,7 @@ docs/08_reproducibility_audit_checklists.md
 ```bash
 python scripts/validate_project.py
 python scripts/run_notebook.py
+python scripts/generate_final_report.py
 python scripts/audit_project.py
 ```
 

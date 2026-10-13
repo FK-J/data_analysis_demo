@@ -37,7 +37,10 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
     if not yaml_path.exists():
         raise FileNotFoundError(f"YAML file not found: {yaml_path}")
     with yaml_path.open("r", encoding="utf-8") as file:
-        data = yaml.safe_load(file) or {}
+        try:
+            data = yaml.safe_load(file) or {}
+        except yaml.YAMLError as exc:
+            raise ConfigError(f"Invalid YAML: {yaml_path}: {exc}") from exc
     if not isinstance(data, dict):
         raise ConfigError(f"YAML root must be a mapping: {yaml_path}")
     return data

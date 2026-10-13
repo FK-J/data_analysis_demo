@@ -31,11 +31,6 @@ def _asset_paths(report_inputs: dict[str, Any]) -> Iterable[str]:
                     yield str(asset["path"])
 
 
-def _latest_manifest(root: Path) -> Path | None:
-    manifests = list((root / "logs" / "runs").glob("*/manifest.json"))
-    return max(manifests, key=lambda path: path.stat().st_mtime) if manifests else None
-
-
 def audit_project(project_root: str | Path) -> ValidationReport:
     """Validate project structure and verify concrete delivery evidence."""
     root = Path(project_root).resolve()
@@ -56,6 +51,11 @@ def audit_project(project_root: str | Path) -> ValidationReport:
         return ValidationReport(results)
 
     deliverables = config["deliverables"]
+    from .workflow import evaluate_stage
+    try:
+        results.extend(evaluate_stage(root, config, "audited"))
+    except (ConfigError, FileNotFoundError, ValueError, KeyError, TypeError) as exc:
+        results.append(check("stage_exit", "fail", str(exc), category="analysis"))
     for key, relative_dir in (("figures", "reports/figures"), ("tables", "reports/tables")):
         if deliverables[key]:
             files = _non_placeholder_files(root / relative_dir)
@@ -123,20 +123,4 @@ def audit_project(project_root: str | Path) -> ValidationReport:
             )
         )
 
-    manifest_path = _latest_manifest(root)
-    if manifest_path is None:
-        results.append(check("notebook_execution", "fail", "No headless Notebook run manifest was found."))
-    else:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        passed = manifest.get("status") == "passed"
-        results.append(
-            check(
-                "notebook_execution",
-                "pass" if passed else "fail",
-                "Latest headless Notebook execution passed."
-                if passed
-                else "Latest headless Notebook execution did not pass.",
-                manifest_path.relative_to(root),
-            )
-        )
     return ValidationReport(results)

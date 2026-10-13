@@ -32,10 +32,9 @@ def prepare_notebook_context(project_root: str | Path) -> dict[str, Any]:
         )
 
     if project_config["project"]["mode"] == "project":
-        required = (
-            project_config["paths"]["analysis_framework"],
-            project_config["paths"]["report_structure"],
-        )
+        required = [project_config["paths"]["analysis_framework"]]
+        if project_config["deliverables"]["final_report"]:
+            required.append(project_config["paths"]["report_structure"])
         missing = [path for path in required if not resolve_project_path(root, path).exists()]
         if missing:
             raise FileNotFoundError("Required confirmed project artifacts are missing: " + ", ".join(missing))

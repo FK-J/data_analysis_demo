@@ -19,6 +19,7 @@ except ImportError as exc:  # pragma: no cover
 from .config import resolve_project_path, validate_against_schema, validate_project_config
 from .notebook import write_notebook
 from .status import update_status
+from .provenance import input_fingerprints, output_fingerprints
 
 
 def _timestamp() -> str:
@@ -87,20 +88,36 @@ def execute_notebook(
         "error": None,
         "checks": preflight_checks or [],
         "artifacts": [],
+        "input_fingerprints": input_fingerprints(root, config),
+        "output_fingerprints": {},
+        "report_fingerprints": {},
     }
     _write_manifest(manifest_path, manifest, root)
     update_status(root, last_run_id=run_id, last_run_status="running")
 
-    notebook = nbformat.read(notebook_path, as_version=4)
-    client = NotebookClient(
-        notebook,
-        timeout=int(config["runtime"]["notebook_timeout_seconds"]),
-        kernel_name=config["runtime"]["notebook_kernel"],
-        resources={"metadata": {"path": str(root)}},
-    )
-
+    notebook = nbformat.v4.new_notebook()
     try:
+        notebook = nbformat.read(notebook_path, as_version=4)
+        # Only the executed copy receives this context; source Notebook remains untouched.
+        notebook.cells.insert(0, nbformat.v4.new_code_cell(
+            f"import os\nos.environ['ANALYSIS_RUN_ID'] = {run_id!r}",
+            metadata={"tags": ["harness-run-context"]},
+        ))
+        client = NotebookClient(
+            notebook,
+            timeout=int(config["runtime"]["notebook_timeout_seconds"]),
+            kernel_name=config["runtime"]["notebook_kernel"],
+            resources={"metadata": {"path": str(root)}},
+        )
         client.execute()
+        if config["project"]["mode"] == "project":
+            from .workflow import evaluate_stage
+            stage_checks = evaluate_stage(root, config, "analyzed")
+            manifest["checks"].extend(item.as_dict() for item in stage_checks)
+            if any(item.status in {"fail", "unverified"} for item in stage_checks):
+                raise ValueError("Analysis stage did not pass: " + "; ".join(item.message for item in stage_checks if item.status in {"fail", "unverified"}))
+        if input_fingerprints(root, config) != manifest["input_fingerprints"]:
+            raise ValueError("Registered inputs, code or contracts changed during execution; rerun with stable inputs.")
         manifest["status"] = "passed"
         manifest["artifacts"].append(executed_path.relative_to(root).as_posix())
         update_status(
@@ -116,6 +133,12 @@ def execute_notebook(
         update_status(root, last_run_id=run_id, last_run_status="failed")
     finally:
         write_notebook(notebook, executed_path)
+        try:
+            manifest["output_fingerprints"] = output_fingerprints(root, config, executed_path)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            manifest["status"] = "failed"
+            manifest["error"] = manifest["error"] or str(exc)
+            update_status(root, last_run_id=run_id, last_run_status="failed")
         manifest["finished_at"] = _timestamp()
         _write_manifest(manifest_path, manifest, root)
 

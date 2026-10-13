@@ -2,10 +2,15 @@
 
 这是一个 Notebook-first 的数据分析项目生成模板，用于快速创建可复现、可审计、可交付的数据分析项目。
 
+本框架提供标准化流程；维护者独立维护原始框架，使用者的副本可个性化调整，不要求升级同步。先阅读 [框架使用说明](docs/framework_usage.md)，明确框架工具、项目配置与业务实现的边界。
+
 ## 核心约定
 
 - `notebooks/main_analysis.ipynb` 是唯一主分析入口，也是支持局部迭代的交互式分析工作台。
 - `project.yaml` 是项目类型、可选能力、交付物和运行路径的结构化契约。
+- `configs/project_contracts.yaml` 集中登记项目决策、数据准入、核心指标、验证规则和报告要求。
+- `.harness/workflow.yaml` 定义可执行的阶段出口，`--stage` 检查该阶段及其之前的证据。
+- 初始化按 `.harness/template_files.yaml` 白名单生成独立项目，不复制业务新增文件、私有配置或历史产物。
 - `templates/notebook_sections.yaml` 根据项目配置组合主 Notebook 章节。
 - `docs/template_usage.md` 是工作流主文档，沉淀新做分析和中途修改需求两类流程。
 - `docs/09_change_management_standard.md` 是后续修改的唯一变更管理规范。
@@ -131,12 +136,15 @@ docs/script_catalog.md
 ```bash
 python scripts/validate_project.py
 python scripts/run_notebook.py
+python scripts/generate_final_report.py
 python scripts/audit_project.py
 ```
 
 - `validate_project.py` 检查配置 Schema、必需文件、Notebook 章节、占位内容、只读 SQL 和敏感文件。
 - `run_notebook.py` 在干净内核中从头执行主 Notebook，并将执行副本和 `manifest.json` 保存到 `logs/runs/<run_id>/`。
 - `audit_project.py` 检查图表、结果表、报告素材、最终报告和最近一次 Notebook 执行证据。
+
+具体项目还应填写项目契约；可用 `python scripts/validate_project.py --stage spec_confirmed` 检查启动出口。正式运行后，审计分别给出工程、分析和报告结论；失败和未验证均阻止交付。报告核心指标引用结果表，运行与报告通过内容指纹和运行 ID 关联。模板模式没有业务报告，跳过报告生成命令。
 
 这些命令是 Notebook 外围的质量门禁；数据分析师日常探索、分析和解释仍在主 Notebook 中完成。
 

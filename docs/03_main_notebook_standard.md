@@ -1,5 +1,7 @@
 # 03. 主 Notebook 规范
 
+项目可以通过 `runtime.notebook_template` 指定业务模板，生成器与校验器共同使用该配置。正式 Notebook 只计算、验证并导出报告素材；报告 CLI 在无界面运行成功后执行，以绑定该次运行。
+
 ## 1. Notebook 定位
 
 `notebooks/main_analysis.ipynb` 是项目的总控执行文件，也是分析叙事文档和交互式分析工作台。

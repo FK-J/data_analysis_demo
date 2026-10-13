@@ -44,7 +44,7 @@ def generate_notebook(
     """Build main_analysis.ipynb from project.yaml and section templates."""
     root = Path(project_root).resolve()
     config = validate_project_config(root, load_project_config(root))
-    source_path = resolve_project_path(root, template_path or DEFAULT_TEMPLATE)
+    source_path = resolve_project_path(root, template_path or config["runtime"].get("notebook_template", DEFAULT_TEMPLATE))
     template = load_yaml(source_path)
     sections = [section for section in template.get("sections") or [] if _section_enabled(section, config)]
 
@@ -90,7 +90,7 @@ def generate_notebook(
                 "schema_version": 1,
                 "project_config_digest": config_digest,
                 "sections": section_ids,
-                "template": str(DEFAULT_TEMPLATE).replace("\\", "/"),
+                "template": source_path.relative_to(root).as_posix(),
             },
         }
     )

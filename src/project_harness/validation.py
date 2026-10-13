@@ -39,6 +39,7 @@ class CheckResult:
     status: str
     message: str
     path: str | None = None
+    category: str = "engineering"
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -52,14 +53,21 @@ class ValidationReport:
 
     @property
     def passed(self) -> bool:
-        return not any(check.status == "fail" for check in self.checks)
+        return not any(check.status in {"fail", "unverified"} for check in self.checks)
 
     def as_dict(self) -> dict[str, Any]:
         return {
             "passed": self.passed,
             "summary": {
                 status: sum(check.status == status for check in self.checks)
-                for status in ("pass", "warn", "fail")
+                for status in ("pass", "warn", "fail", "unverified")
+            },
+            "categories": {
+                category: {
+                    "passed": not any(item.status in {"fail", "unverified"} for item in self.checks if item.category == category),
+                    "checks": sum(item.category == category for item in self.checks),
+                }
+                for category in {item.category for item in self.checks}
             },
             "checks": [check.as_dict() for check in self.checks],
         }
@@ -70,9 +78,11 @@ def check(
     status: str,
     message: str,
     path: str | Path | None = None,
+    *,
+    category: str = "engineering",
 ) -> CheckResult:
     """Build a normalized validation result."""
-    return CheckResult(code=code, status=status, message=message, path=str(path) if path else None)
+    return CheckResult(code=code, status=status, message=message, path=str(path) if path else None, category=category)
 
 
 def _required_paths(config: dict[str, Any]) -> list[str]:
@@ -82,11 +92,13 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
         "project.yaml",
         "configs/analysis_config.yaml",
         ".harness/workflow.yaml",
+        ".harness/template_files.yaml",
         ".harness/status.template.yaml",
         "schemas/project.schema.yaml",
         "schemas/report_inputs.schema.yaml",
         "schemas/run_manifest.schema.yaml",
         "schemas/status.schema.yaml",
+        "schemas/contracts.schema.yaml",
         "templates/notebook_sections.yaml",
         config["runtime"]["notebook"],
         "scripts/init_project.py",
@@ -96,12 +108,9 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
         "scripts/audit_project.py",
     ]
     if config["project"]["mode"] == "project":
-        common.extend(
-            [
-                config["paths"]["analysis_framework"],
-                config["paths"]["report_structure"],
-            ]
-        )
+        common.append(config["paths"]["analysis_framework"])
+        if config["deliverables"]["final_report"]:
+            common.append(config["paths"]["report_structure"])
     else:
         common.extend(
             [
@@ -134,7 +143,7 @@ def _check_notebook(root: Path, config: dict[str, Any]) -> list[CheckResult]:
         return [check("notebook_structure", "fail", "Main Notebook is missing.", config["runtime"]["notebook"])]
 
     notebook = nbformat.read(notebook_path, as_version=4)
-    template = load_yaml(root / DEFAULT_TEMPLATE)
+    template = load_yaml(resolve_project_path(root, config["runtime"].get("notebook_template", DEFAULT_TEMPLATE)))
     expected_sections = enabled_section_ids(config, template)
     actual_sections = list(notebook.metadata.get("harness", {}).get("sections", []))
     results = [
@@ -166,6 +175,8 @@ def _check_placeholders(root: Path, config: dict[str, Any]) -> list[CheckResult]
         return [check("project_placeholders", "pass", "Template mode permits placeholders in source templates.")]
 
     paths = [config["paths"]["analysis_framework"], config["paths"]["report_structure"]]
+    if not config["deliverables"]["final_report"]:
+        paths = [config["paths"]["analysis_framework"]]
     results: list[CheckResult] = []
     for relative_path in paths:
         path = resolve_project_path(root, relative_path)
@@ -253,6 +264,8 @@ def _check_sensitive_files(root: Path) -> list[CheckResult]:
 
 
 def _check_report_inputs(root: Path, config: dict[str, Any]) -> list[CheckResult]:
+    if not config["deliverables"]["final_report"]:
+        return [check("report_inputs_schema", "pass", "Final report inputs are not requested.")]
     relative_path = config["paths"]["report_inputs"]
     path = resolve_project_path(root, relative_path)
     if not path.exists():
@@ -298,7 +311,7 @@ def _check_status_template(root: Path) -> list[CheckResult]:
     return [check("status_schema", "pass", "Status template satisfies its schema.", relative_path)]
 
 
-def validate_project(project_root: str | Path) -> ValidationReport:
+def validate_project(project_root: str | Path, *, stage: str | None = None) -> ValidationReport:
     """Run structural, configuration, Notebook, SQL, and safety checks."""
     root = Path(project_root).resolve()
     results: list[CheckResult] = []
@@ -339,19 +352,27 @@ def validate_project(project_root: str | Path) -> ValidationReport:
     results.extend(_check_sensitive_files(root))
     results.extend(_check_report_inputs(root, config))
     results.extend(_check_status_template(root))
+    from .contracts import validate_contracts
+    results.extend(validate_contracts(root, config))
+    if stage is not None and not any(item.status == "fail" for item in results):
+        from .workflow import evaluate_stage
+        try:
+            results.extend(evaluate_stage(root, config, stage))
+        except (ConfigError, FileNotFoundError, ValueError, KeyError, TypeError) as exc:
+            results.append(check("stage_exit", "fail", str(exc), ".harness/workflow.yaml"))
     return ValidationReport(results)
 
 
 def format_report(report: ValidationReport) -> str:
     """Render checks for terminal users without losing machine-readable status."""
-    symbols = {"pass": "PASS", "warn": "WARN", "fail": "FAIL"}
+    symbols = {"pass": "PASS", "warn": "WARN", "fail": "FAIL", "unverified": "UNVERIFIED"}
     lines = []
     for result in report.checks:
         suffix = f" ({result.path})" if result.path else ""
-        lines.append(f"[{symbols[result.status]}] {result.code}: {result.message}{suffix}")
+        lines.append(f"[{symbols[result.status]}] [{result.category}] {result.code}: {result.message}{suffix}")
     summary = report.as_dict()["summary"]
     lines.append(
-        f"Summary: {summary['pass']} passed, {summary['warn']} warnings, {summary['fail']} failed"
+        f"Summary: {summary['pass']} passed, {summary['warn']} warnings, {summary['fail']} failed, {summary['unverified']} unverified"
     )
     return "\n".join(lines)
 
