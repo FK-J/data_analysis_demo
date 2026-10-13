@@ -46,6 +46,11 @@ def project(tmp_path):
         "report_requirements": [{"id": "Q1", "title": "年度客户留存", "required": True}],
     }
     write_yaml(root / config["paths"]["contracts"], contracts)
+    from src.project_harness.planning import register_change, write_progress
+    with (root / "docs/change_execution_log.md").open("a", encoding="utf-8") as stream:
+        stream.write("\n### CHANGE-20261013-01：客户留存分析\n\n- 需求：年度留存分析\n")
+    register_change(root, config, "CHANGE-20261013-01", "客户留存分析", ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08"])
+    write_progress(root, config)
     generate_notebook(root)
     return root
 

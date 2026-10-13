@@ -121,5 +121,11 @@ def initialize_project(
         encoding="utf-8",
     )
 
+    plan_path = resolve_project_path(target, config["paths"].get("plan", "docs/project_plan.yaml"))
+    plan_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(target / "docs/project_plan_template.yaml", plan_path)
+    from .planning import write_progress
+    write_progress(target, config)
+
     generate_notebook(target)
     return target

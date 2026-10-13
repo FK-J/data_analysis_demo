@@ -30,6 +30,8 @@ runtime:
   notebook_timeout_seconds: 600
 
 paths:
+  plan: docs/project_plan.yaml
+  progress: docs/progress_summary.md
   contracts: configs/project_contracts.yaml
   analysis_framework: docs/analysis_framework.md
   report_structure: reports/final/final_report_structure.md

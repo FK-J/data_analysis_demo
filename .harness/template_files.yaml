@@ -1,6 +1,11 @@
 # 初始化白名单：业务项目新增文件不会自动成为模板文件。
 schema_version: 1
 files:
+- docs/project_plan_template.yaml
+- schemas/plan.schema.yaml
+- scripts/update_progress.py
+- src/project_harness/planning.py
+- tests/test_project_planning.py
 - .env.example
 - .gitattributes
 - .gitignore

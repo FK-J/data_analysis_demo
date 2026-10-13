@@ -99,6 +99,9 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
         "schemas/run_manifest.schema.yaml",
         "schemas/status.schema.yaml",
         "schemas/contracts.schema.yaml",
+        "schemas/plan.schema.yaml",
+        "docs/project_plan_template.yaml",
+        "scripts/update_progress.py",
         "templates/notebook_sections.yaml",
         config["runtime"]["notebook"],
         "scripts/init_project.py",
@@ -354,6 +357,8 @@ def validate_project(project_root: str | Path, *, stage: str | None = None) -> V
     results.extend(_check_status_template(root))
     from .contracts import validate_contracts
     results.extend(validate_contracts(root, config))
+    from .planning import validate_progress
+    results.extend(validate_progress(root, config))
     if stage is not None and not any(item.status == "fail" for item in results):
         from .workflow import evaluate_stage
         try:

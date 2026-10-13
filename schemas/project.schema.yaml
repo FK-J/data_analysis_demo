@@ -86,6 +86,8 @@ properties:
       report_inputs: {$ref: '#/$defs/relativePath'}
       final_report: {$ref: '#/$defs/relativePath'}
       contracts: {$ref: '#/$defs/relativePath'}
+      plan: {$ref: '#/$defs/relativePath'}
+      progress: {$ref: '#/$defs/relativePath'}
 $defs:
   relativePath:
     type: string

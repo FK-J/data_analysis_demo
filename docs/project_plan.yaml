@@ -1,0 +1,102 @@
+schema_version: 1
+changes:
+- id: CHANGE-20260713-01
+  summary: 完善后续修改工作流
+  task_ids:
+  - H01
+  request_fingerprint: 6a20dab125157222296e3abff9bb9e46857f2da43c57660659ab294eaf3a0984
+- id: CHANGE-20260802-01
+  summary: Notebook-first Harness 工作流
+  task_ids:
+  - H02
+  request_fingerprint: fb019bf5b9aa04c16f2dbbbad6acf02f934b6b594035e02522df427413ff6a30
+- id: CHANGE-20261013-01
+  summary: 框架边界、验收与追溯
+  task_ids:
+  - H03
+  request_fingerprint: 0d58039d149ab00b02e129451ae63552afb2b6c7cb7607d385e16d73c9792906
+- id: CHANGE-20261013-02
+  summary: 每个新需求和需求变更同步更新计划与进度摘要
+  task_ids:
+  - P01
+  - P02
+  - P03
+  request_fingerprint: 79281dc7a4549ab45b9fcb68b52691dc06b0add18602bb59d274884faaef1b8e
+tasks:
+- id: H01
+  title: 完善后续修改工作流
+  stage: audited
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - docs/change_execution_log.md
+  acceptance: 历史变更已完成并保留验证记录
+  evidence: CHANGE-20260713-01 的变更关闭记录
+  blocker: ''
+  next_action: ''
+- id: H02
+  title: Notebook-first Harness 工作流
+  stage: audited
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - docs/change_execution_log.md
+  acceptance: 历史变更已完成并保留验证记录
+  evidence: CHANGE-20260802-01 的变更关闭记录
+  blocker: ''
+  next_action: ''
+- id: H03
+  title: 框架边界、验收与追溯
+  stage: audited
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - docs/change_execution_log.md
+  acceptance: 历史变更已完成并保留验证记录
+  evidence: CHANGE-20261013-01 的变更关闭记录
+  blocker: ''
+  next_action: ''
+- id: P01
+  title: 实现项目计划与摘要生成和校验
+  stage: analyzed
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - src/project_harness/planning.py
+  - scripts/update_progress.py
+  acceptance: 需求映射、依赖与摘要过期校验有效
+  evidence: 21 项针对性/基础测试通过；计划与需求映射、过期摘要及需求范围重新登记检查通过
+  blocker: ''
+  next_action: ''
+- id: P02
+  title: 同步初始化、规范和使用说明
+  stage: reported
+  owner: 框架维护者
+  status: completed
+  dependencies:
+  - P01
+  outputs:
+  - docs/framework_usage.md
+  - docs/project_plan_template.yaml
+  acceptance: 每次新需求和变更必须同步更新计划及摘要
+  evidence: 初始化、项目入口、变更规范、脚本目录和框架使用说明已同步
+  blocker: ''
+  next_action: ''
+- id: P03
+  title: 验证完整流程并关闭变更
+  stage: audited
+  owner: 框架维护者
+  status: completed
+  dependencies:
+  - P02
+  outputs:
+  - tests/test_project_planning.py
+  acceptance: 针对性测试、完整回归、模板运行及审计通过
+  evidence: 51 项完整回归通过；主 Notebook 运行 20261013T101035Z-8e50be2f 通过；模板校验 36 项通过；模板审计
+    36 项通过、0 失败
+  blocker: ''
+  next_action: ''

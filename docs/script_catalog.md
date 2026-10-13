@@ -23,6 +23,7 @@
 | `scripts/run_notebook.py` | 在干净内核中执行主 Notebook 并保存证据 | `python scripts/run_notebook.py` | 是 |
 | `scripts/audit_project.py` | 审计执行证据和预期交付物 | `python scripts/audit_project.py` | 是 |
 | `scripts/generate_final_report.py` | 根据结构化输入生成最终分析报告 | `python scripts/generate_final_report.py` | 是 |
+| `scripts/update_progress.py` | 核对需求与计划，生成项目进度摘要 | `python scripts/update_progress.py` | 是 |
 
 ## 3. 脚本详情
 
@@ -175,6 +176,20 @@ python scripts/generate_final_report.py --with-insights
 - 运行前应检查 `report_inputs.yaml` 是否仍有“待填写”占位内容，以及是否包含不应进入报告的敏感明细信息。
 
 ## 4. 新增脚本登记模板
+
+### `scripts/update_progress.py`
+
+**功能：** 检查需求/变更记录与任务计划的映射、任务依赖、验收依据及状态，生成阶段与任务进度、阻塞项和下一步。每个新需求或需求变更前必须更新计划并运行此脚本，任务状态变化及变更关闭后也需刷新。
+
+**输入：** `project.yaml`、`docs/project_plan.yaml`、`docs/change_execution_log.md`、本地运行状态；支持 `--project-root` 指定项目。`--change-id`、`--summary`、`--tasks` 必须一起使用，用于新需求或既有需求范围变更登记；已完成或已取消的受影响任务及下游任务会被重新打开。
+
+**输出：** `docs/progress_summary.md`（可由 `paths.progress` 配置）。
+
+**命令：** `python scripts/update_progress.py`。
+
+**是否必须由 Notebook 调用：** 否，属于开发协作与进度管理工具，不执行分析。
+
+**写文件和注意事项：** 默认只覆盖生成的摘要；登记需求参数会同步修改计划的需求映射、范围指纹和需重新验证的任务状态。不修改变更记录。计划与变更记录不一致时返回非零。任务完成需人工填写验收依据，摘要本身不证明分析正确。
 
 新增脚本时，复制以下模板到“脚本详情”并填写。
 

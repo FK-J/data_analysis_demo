@@ -42,13 +42,16 @@
 每次受管修改必须按以下顺序执行：
 
 1. **登记需求：** 在 `docs/change_execution_log.md` 写明需求、等级和验收标准。
+   每个初始需求、新增需求和既有需求变更都执行此要求，不限于已有项目的后续修改。
 2. **判断影响：** 列出受影响的业务框架、报告结构、数据、SQL、Python、Notebook、图表、表格和报告。
+   同步更新项目计划的任务、依赖、产物和验收条件，使用 `scripts/update_progress.py --change-id CHANGE-YYYYMMDD-XX --summary "本次需求" --tasks T01 T02` 登记影响任务并生成进度摘要。即使修改沿用原 Change ID，也必须重新登记；受影响的已完成任务及下游任务自动改为“待重新验证”。
 3. **同步上游文档：** 业务契约变化时先更新 `docs/analysis_framework.md`；报告结构变化时先更新 `reports/final/final_report_structure.md`。
 4. **实施修改：** 修改受影响的 SQL、Python、Notebook、配置或报告素材。
 5. **执行受影响流程：** 从最早受影响环节运行到最远受影响产物，不能在当前 cell、表格或图表正确后停止。
 6. **完成校验：** 检查数据质量、指标口径、总计、筛选范围、新旧结果差异和输出一致性。
 7. **更新正式产物：** 重新生成受影响的图表、结果表、`report_inputs.yaml` 和最终报告。
 8. **关闭记录：** 在变更日志中逐项确认完成情况，记录未完成项和风险。
+   同步任务验收状态与依据，运行 `python scripts/update_progress.py` 刷新摘要，再向用户汇报已完成、阻塞、剩余任务和下一步。
 
 标准流程：
 
@@ -82,6 +85,7 @@
 出现以下任一情况时，不得把修改标记为完成：
 
 - 没有写清需求、等级或验收标准。
+- 新增/变更需求没有映射到计划，或者进度摘要仍是旧版。
 - 业务框架或报告结构发生变化但未同步。
 - 只修改了局部文件，没有运行受影响的下游流程。
 - 仍在使用已经失效的旧缓存、旧表格或旧图表。
@@ -102,12 +106,14 @@ L2 修改在日常验证时可以从受影响环节开始；正式交付前仍�
 ## 8. 文档职责
 
 - `docs/change_execution_log.md`：记录每次修改的执行范围、完成情况和风险。
+- `docs/project_plan.yaml`：维护任务状态、依赖、产物、验收依据及 Change ID 映射。
+- `docs/progress_summary.md`：脚本生成的用户进度视图，不手工编辑。
 - `docs/analysis_framework.md`：维护当前有效的业务问题、口径、范围和方法。
 - `reports/final/final_report_structure.md`：维护当前有效的报告结构。
 - `docs/framework_issue_log.md`：只记录框架、模板、工具或流程本身的问题。
 - `docs/08_reproducibility_audit_checklists.md`：负责最终交付审计。
 
-执行状态只在 `docs/change_execution_log.md` 维护，其他文档不重复记录同一状态。
+需求执行状态在变更日志维护，细分任务状态只在项目计划维护；进度摘要自动汇总这些信息。避免在业务框架和报告结构中再次维护状态。
 
 ## 9. Agent 执行要求
 

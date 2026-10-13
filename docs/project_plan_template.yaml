@@ -1,0 +1,94 @@
+# 初始化后保存为 docs/project_plan.yaml；项目计划是任务状态的唯一事实来源。
+# 每次新需求/变更在 changes 中关联 change_id 和受影响 task_ids。
+# 受影响的已完成任务改为 revalidate，之后重新实施/验收；取消任务需说明原因。
+schema_version: 1
+changes: []
+tasks:
+  - id: T01
+    title: 创建项目并登记首个需求
+    stage: discovery
+    owner: 项目负责人
+    status: pending
+    dependencies: []
+    outputs: [project.yaml, docs/change_execution_log.md]
+    acceptance: 项目配置有效，首个需求已经登记并映射到本计划
+    evidence: ''
+    blocker: ''
+    next_action: 登记需求并按实际范围调整以下任务
+  - id: T02
+    title: 确认业务问题、关键决策和交付结构
+    stage: spec_confirmed
+    owner: 项目负责人
+    status: pending
+    dependencies: [T01]
+    outputs: [docs/analysis_framework.md, configs/project_contracts.yaml]
+    acceptance: 业务范围明确，到期决策有确认依据，交付方案已经审阅
+    evidence: ''
+    blocker: ''
+    next_action: 填写业务框架、报告结构和决策契约
+  - id: T03
+    title: 接入数据并形成准入结论
+    stage: data_ready
+    owner: 项目负责人
+    status: pending
+    dependencies: [T02]
+    outputs: [configs/project_contracts.yaml]
+    acceptance: 来源粒度、关联、缺失和时间语义明确，可用范围有证据
+    evidence: ''
+    blocker: ''
+    next_action: 检查来源并登记可用、受限或排除结论
+  - id: T04
+    title: 完成数据质量校验
+    stage: quality_passed
+    owner: 项目负责人
+    status: pending
+    dependencies: [T03]
+    outputs: []
+    acceptance: 项目声明的 data 检查通过，异常处理有记录
+    evidence: ''
+    blocker: ''
+    next_action: 定义并执行数据检查规则
+  - id: T05
+    title: 实现分析与关键结果对账
+    stage: analyzed
+    owner: 项目负责人
+    status: pending
+    dependencies: [T04]
+    outputs: [notebooks/main_analysis.ipynb]
+    acceptance: 核心指标定义完整，分析实现及独立核对通过
+    evidence: ''
+    blocker: ''
+    next_action: 按业务问题拆分本任务并实现分析
+  - id: T06
+    title: 完整复现主 Notebook
+    stage: validated
+    owner: 项目负责人
+    status: pending
+    dependencies: [T05]
+    outputs: []
+    acceptance: 干净内核完整运行通过，输入与产物指纹一致
+    evidence: ''
+    blocker: ''
+    next_action: 执行正式运行并复核运行清单
+  - id: T07
+    title: 生成并审阅最终报告
+    stage: reported
+    owner: 项目负责人
+    status: pending
+    dependencies: [T06]
+    outputs: []
+    acceptance: 报告覆盖、指标对账及运行绑定通过，表达已审阅
+    evidence: ''
+    blocker: ''
+    next_action: 启用报告时生成并审阅；不适用时取消任务并记录原因
+  - id: T08
+    title: 审计交付并关闭需求
+    stage: audited
+    owner: 项目负责人
+    status: pending
+    dependencies: [T07]
+    outputs: []
+    acceptance: 交付审计通过，剩余限制明确，变更记录已关闭
+    evidence: ''
+    blocker: ''
+    next_action: 完成交付审计，更新任务状态和变更记录，再生成进度摘要

@@ -9,6 +9,7 @@
 - `notebooks/main_analysis.ipynb` 是唯一主分析入口，也是支持局部迭代的交互式分析工作台。
 - `project.yaml` 是项目类型、可选能力、交付物和运行路径的结构化契约。
 - `configs/project_contracts.yaml` 集中登记项目决策、数据准入、核心指标、验证规则和报告要求。
+- `docs/project_plan.yaml` 维护任务、依赖和需求影响；`docs/progress_summary.md` 展示整体进度、阻塞与下一步。每个新需求及需求变更都必须更新计划并运行 `scripts/update_progress.py`。
 - `.harness/workflow.yaml` 定义可执行的阶段出口，`--stage` 检查该阶段及其之前的证据。
 - 初始化按 `.harness/template_files.yaml` 白名单生成独立项目，不复制业务新增文件、私有配置或历史产物。
 - `templates/notebook_sections.yaml` 根据项目配置组合主 Notebook 章节。

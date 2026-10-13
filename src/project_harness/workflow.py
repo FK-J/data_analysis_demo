@@ -40,6 +40,9 @@ def evaluate_stage(root: Path, config: dict[str, Any], stage: str) -> list[Check
             results.append(check("stage_artifact", "pass" if path.is_file() else "fail", f"{definition['id']}: required evidence.", relative))
         for gate in definition.get("gates", []):
             if gate == "decisions":
+                from .planning import change_ids
+                if not change_ids(root):
+                    results.append(check("requirement_plan", "unverified", "Register the initial requirement and update the development plan before analysis."))
                 if not contracts["decisions"]:
                     results.append(check("decision_readiness", "unverified", "No decisions are declared.", category="analysis"))
                 for decision in contracts["decisions"]:

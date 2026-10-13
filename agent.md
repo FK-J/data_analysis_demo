@@ -16,6 +16,8 @@
 - 业务分析框架必须保存为 `docs/analysis_framework.md`，可基于 `docs/analysis_framework_template.md` 创建。
 - 在分析执行前，应同步确认最终报告呈现结构，并保存为 `reports/final/final_report_structure.md`。
 - 后续用户提出新的分析需求时，必须先在 `docs/change_execution_log.md` 登记需求、等级、验收标准和影响范围。
+- 每次新建需求或修改既有需求，都必须在实施前同步更新 `docs/project_plan.yaml` 并生成 `docs/progress_summary.md`；通过 `scripts/update_progress.py --change-id ... --summary ... --tasks ...` 关联受影响任务，已完成的受影响任务及下游任务需重新验证。
+- 任务开始、阻塞、验收、取消或返工时更新计划；每次向用户汇报进度或关闭变更前刷新摘要。计划维护任务状态，变更日志维护需求执行记录，摘要由脚本生成，不手工维护第三套状态。
 - 只有业务契约发生变化时才更新 `docs/analysis_framework.md`；修复实现以符合原口径时不改写业务框架。
 - 修改后必须从最早受影响环节运行到最远受影响产物，不得把“文件已修改”作为完成标准。
 - L3 变更、无法确认缓存有效性或准备正式交付时，必须从头到尾顺序运行主 Notebook 并重新生成最终报告。
@@ -46,6 +48,8 @@
 | 文档 | 核心作用 | 不负责 |
 | --- | --- | --- |
 | [framework_usage.md](docs/framework_usage.md) | 框架与项目边界、完整使用步骤、自动化职责、阶段出口及项目契约说明。 | 不新增业务方法索引或升级同步机制。 |
+| `docs/project_plan.yaml` / `docs/project_plan_template.yaml` | 项目任务、依赖、验收依据和需求影响映射；模板只提供初始任务骨架。 | 不替代业务框架和变更关闭记录。 |
+| `docs/progress_summary.md` | 自动汇总计划、阻塞、下一步与最近运行，供用户查看整体进度。 | 不手工维护任务状态，不证明分析正确。 |
 | [README.md](README.md) | 项目入口和快速导航，说明最少必读文件、常用命令和安全底线。 | 不展开完整工作流和细则。 |
 | [agent.md](agent.md) | Agent 执行入口，说明默认原则、文档职责和最低交付要求。 | 不替代各分册的详细规范。 |
 | [template_usage.md](docs/template_usage.md) | 工作流主文档，沉淀新做分析、中途修改需求和贯穿式问题记录流程。 | 不写具体项目的业务内容。 |

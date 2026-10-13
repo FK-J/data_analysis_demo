@@ -70,4 +70,13 @@ def update_status(
         label="local project status",
     )
     write_yaml(root / STATUS_PATH, status)
+    # Operational transitions refresh the display without changing user-owned task statuses.
+    from .planning import PLAN_PATH, write_progress
+    config = load_project_config(root)
+    if (root / config["paths"].get("plan", PLAN_PATH)).is_file():
+        try:
+            write_progress(root, config)
+        except (OSError, ValueError, KeyError, TypeError):
+            # Keep the old summary stale; validation exposes the plan inconsistency.
+            pass
     return status

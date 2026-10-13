@@ -22,6 +22,8 @@ docs/change_execution_log.md
 
 该文件是修改执行状态的唯一记录。L0-L3 判级、重跑范围和完成条件统一遵循 `docs/09_change_management_standard.md`。
 
+每个初始需求、新增需求和需求变更同时更新 `docs/project_plan.yaml`，通过 `scripts/update_progress.py --change-id ... --summary ... --tasks ...` 登记影响任务并生成摘要。任务状态只在计划维护；进度摘要自动生成。开发过程中任务状态变化、用户进度汇报与变更关闭前都需刷新。
+
 如果修改暴露出框架、模板、工具或流程缺陷，再同步更新 `docs/framework_issue_log.md` 并关联 `change_id`。普通业务需求和执行状态不重复写入问题日志。
 
 ### 新做分析项目工作流
