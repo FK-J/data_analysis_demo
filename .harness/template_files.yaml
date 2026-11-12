@@ -1,6 +1,8 @@
 # 初始化白名单：业务项目新增文件不会自动成为模板文件。
 schema_version: 1
 files:
+- conftest.py
+- pyproject.toml
 - docs/project_plan_template.yaml
 - schemas/plan.schema.yaml
 - scripts/update_progress.py
@@ -30,6 +32,7 @@ files:
 - docs/07_visualization_reporting_delivery.md
 - docs/08_reproducibility_audit_checklists.md
 - docs/09_change_management_standard.md
+- docs/analysis_detail_report_template.md
 - docs/analysis_framework_template.md
 - docs/final_analysis_report_template.md
 - docs/final_report_structure_template.md
@@ -82,6 +85,7 @@ files:
 - src/project_harness/provenance.py
 - src/project_harness/runtime.py
 - src/project_harness/scaffold.py
+- src/project_harness/sql_policy.py
 - src/project_harness/status.py
 - src/project_harness/validation.py
 - src/project_harness/workflow.py
@@ -92,6 +96,7 @@ files:
 - src/reporting/.gitkeep
 - src/reporting/__init__.py
 - src/reporting/exports.py
+- src/reporting/report.py
 - src/stats/.gitkeep
 - src/stats/__init__.py
 - src/visualization/.gitkeep

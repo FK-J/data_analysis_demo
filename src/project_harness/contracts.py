@@ -109,7 +109,7 @@ def check_report_metrics(root: Path, config: dict[str, Any], contracts: dict[str
     """Compare displayed numeric values with declared result-table cells."""
     if not config["deliverables"]["final_report"]:
         return []
-    from src.io import load_table
+    from ..io import load_table
     path = resolve_project_path(root, config["paths"]["report_inputs"])
     if not path.is_file():
         return [check("report_metrics", "unverified", "Report inputs are missing.", category="report")]

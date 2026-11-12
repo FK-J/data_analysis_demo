@@ -20,7 +20,7 @@
 - `reports/final/final_report_structure.md` 是具体项目的最终报告结构，正式分析前必须确认。
 - `docs/framework_issue_log.md` 只记录框架、模板、工具或流程缺陷及改进建议。
 - `docs/script_catalog.md` 记录可直接执行脚本的功能、输入、输出和使用规范。
-- `scripts/generate_final_report.py` 固定生成最终报告，默认只呈现结果。
+- `scripts/generate_final_report.py` 同时生成结论摘要 `final_analysis_report.md` 和分析详情 `analysis_detail.html`；摘要只放结论与索引，详情承载完整过程，默认只呈现结果。
 - `reports/` 保存图表、结果表、报告输入素材和最终交付物。
 - `configs/` 管理项目参数和数据源配置。
 - `sql/` 保存可复用 SQL。
@@ -45,8 +45,8 @@ python scripts/init_project.py --output ../customer_retention_analysis --name cu
 4. 按需配置私有数据库连接和 `configs/analysis_config.yaml`。
 5. 在主 Notebook 中交互完成数据加载、质量检查、分析、验证和结果展示。
 6. 将复杂 SQL 放入 `sql/`，将稳定、可复用的 Python 逻辑放入 `src/`，再由 Notebook 调用。
-7. 将关键结果导出到 `reports/`，并生成 `reports/final/report_inputs.yaml`。
-8. 运行报告生成器和自动验收命令。
+7. 将关键结果导出到 `reports/`，并生成包含结论、过程步骤和证据的 `reports/final/report_inputs.yaml`。
+8. 运行报告生成器，得到结论摘要和分析详情两份产物，再执行自动验收命令。
 
 完整工作流和规范入口见：
 
@@ -59,13 +59,13 @@ docs/template_usage.md
 
 ```text
 确认业务分析框架
-→ 确认最终报告结构
+→ 确认结论摘要和分析详情结构
 → 在 change_execution_log.md 登记需求、等级和验收标准
 → 持续记录使用问题和框架改进建议
 → 配置数据源和项目参数
 → 在 notebooks/main_analysis.ipynb 中迭代分析
 → 导出图表、结果表和 report_inputs.yaml
-→ 完整运行主 Notebook 并生成最终报告
+→ 完整运行主 Notebook 并生成结论摘要和分析详情
 → 按 docs/08_reproducibility_audit_checklists.md 审计交付
 ```
 
@@ -73,11 +73,11 @@ docs/template_usage.md
 
 ## 环境准备
 
-建议使用独立 Python 环境：
+需要 Python 3.9 及以上（推荐 3.11）。建议使用独立 Python 环境：
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -89,6 +89,8 @@ conda activate data-analysis-demo
 pip install -r requirements.txt
 ```
 
+依赖清单见 `requirements.txt`。只做本地文件分析时，数据库和建模相关依赖可以不安装；`src/project_harness/` 的校验逻辑不依赖数据库驱动。
+
 ## 常用命令
 
 初始化阶段根据 `project.yaml` 生成或更新主 Notebook：
@@ -99,17 +101,24 @@ python scripts/generate_notebook.py
 
 生成器只维护标准章节骨架。正式分析后覆盖 Notebook 前必须审阅影响，并按变更管理规范登记和验证。
 
-生成最终报告：
+生成结论摘要和分析详情：
 
 ```bash
 python scripts/generate_final_report.py
 ```
+
+默认同时生成：
+
+- `reports/final/final_analysis_report.md`：元数据与运行 ID、核心结论、关键指标、关键图表、交付物索引。
+- `reports/final/analysis_detail.html`：完整分析过程、证据、图表、结果表、口径和每节结论。
 
 如需渲染已准备好的洞察内容：
 
 ```bash
 python scripts/generate_final_report.py --with-insights
 ```
+
+仅本地迭代某一份产物时，可使用 `--format md` 或 `--format html`；正式交付必须同时生成并绑定两份产物。
 
 运行脚本前，先查看：
 
@@ -130,6 +139,18 @@ docs/script_catalog.md
 
 如果必须保留示例数据，必须确认数据已经脱敏，且体积适合进入 Git。
 
+## 测试与持续集成
+
+框架自带回归测试（Pytest 配置在 `pyproject.toml`，项目根 `conftest.py` 负责把项目根加入 `sys.path`，因此 `pytest` 与 `python -m pytest` 等价）：
+
+```bash
+pytest -q
+```
+
+`.github/workflows/ci.yml` 在每次提交和 PR 时执行 `ruff check .`、`pytest -q`、`python scripts/validate_project.py` 和 `python scripts/audit_project.py`。
+
+`tests/` 中的框架自检测试只在模板仓库（`project.yaml` 的 `mode: template`）中运行，在具体业务项目副本中会自动跳过；业务项目应在同一目录下自行补充指标、清洗和数据校验测试。
+
 ## 自动验证与审计
 
 交付前依次运行：
@@ -141,9 +162,9 @@ python scripts/generate_final_report.py
 python scripts/audit_project.py
 ```
 
-- `validate_project.py` 检查配置 Schema、必需文件、Notebook 章节、占位内容、只读 SQL 和敏感文件。
-- `run_notebook.py` 在干净内核中从头执行主 Notebook，并将执行副本和 `manifest.json` 保存到 `logs/runs/<run_id>/`。
-- `audit_project.py` 检查图表、结果表、报告素材、最终报告和最近一次 Notebook 执行证据。
+- `validate_project.py` 检查配置 Schema、必需文件、Notebook 章节与生成指纹、占位内容、只读 SQL 和敏感文件。
+- `run_notebook.py` 在干净内核中从头执行主 Notebook，并将执行副本和 `manifest.json` 保存到 `logs/runs/<run_id>/`；清单记录 Python 版本、输入/产物指纹和预检结果。
+- `audit_project.py` 检查图表、结果表、报告素材、结论摘要、分析详情、相对链接和最近一次 Notebook 执行证据。
 
 具体项目还应填写项目契约；可用 `python scripts/validate_project.py --stage spec_confirmed` 检查启动出口。正式运行后，审计分别给出工程、分析和报告结论；失败和未验证均阻止交付。报告核心指标引用结果表，运行与报告通过内容指纹和运行 ID 关联。模板模式没有业务报告，跳过报告生成命令。
 

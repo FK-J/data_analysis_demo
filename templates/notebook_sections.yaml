@@ -305,10 +305,10 @@ sections:
           清洗后的数据、业务分析框架、指标口径和业务假设。
 
           **处理逻辑：**
-          每个问题按“判断标准、计算结果、证据、解释、限制”组织，而不是按代码执行顺序组织。
+          每个问题按“判断标准、计算结果、证据、解释、限制”组织，而不是按代码执行顺序组织。每个业务问题都必须写出本节结论，并保留可供详情页使用的分析过程步骤。
 
           **输出文件/对象：**
-          每个业务问题对应的关键结果、图表、结果表和口径说明。
+          每个业务问题对应的本节结论、关键结果、分析过程、图表、结果表和口径说明。
 
           **是否可缓存：**
           可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
@@ -406,7 +406,7 @@ sections:
           ## {section_number}. 图表、表格与报告素材导出
 
           **目的：**
-          将关键图表、结果表和结构化报告素材保存到 `reports/`。
+          将关键图表、结果表和结构化报告素材保存到 `reports/`，同时准备结论摘要和分析详情所需的素材。
 
           **上游依赖：**
           依赖前序章节已完成，并已确认相关配置、口径和输入对象。
@@ -415,7 +415,7 @@ sections:
           已验证的分析结果、图表对象、结果 DataFrame 和报告结构。
 
           **处理逻辑：**
-          导出逻辑应封装到 `src/reporting/`；Notebook 负责选择最终交付内容并调用导出函数。
+          导出逻辑应封装到 `src/reporting/`；Notebook 负责选择最终交付内容并调用导出函数。报告素材需同时包含结论摘要使用的 `summary.conclusions`，以及分析详情使用的逐问题结论、分析过程、图表和结果表。
 
           **输出文件/对象：**
           `reports/figures/`、`reports/tables/` 和 `reports/final/report_inputs.yaml`。
@@ -438,10 +438,10 @@ sections:
     cells:
       - type: markdown
         source: |
-          ## {section_number}. 最终报告生成
+          ## {section_number}. 结论摘要与分析详情生成
 
           **目的：**
-          基于结构化报告素材生成结果呈现型最终报告。
+          基于结构化报告素材生成结论摘要和分析详情两份报告产物。
 
           **上游依赖：**
           依赖前序章节已完成，并已确认相关配置、口径和输入对象。
@@ -450,19 +450,20 @@ sections:
           `reports/final/report_inputs.yaml` 和已经确认的报告结构。
 
           **处理逻辑：**
-          在正式无界面运行结束后于终端运行 `python scripts/generate_final_report.py`；生成器核对运行、指标引用和主题覆盖。
+          在正式无界面运行结束后于终端运行 `python scripts/generate_final_report.py`；生成器核对运行、指标引用和主题覆盖，并同时生成结论摘要 Markdown 与分析详情 HTML。
 
           **输出文件/对象：**
-          `reports/final/final_analysis_report.md`。
+          `reports/final/final_analysis_report.md` 和 `reports/final/analysis_detail.html`。
 
           **是否可缓存：**
           可缓存可复用的中间结果；上游数据、配置、口径或代码变化时必须失效并重跑。
 
           **调试提示：**
-          默认不生成大模型洞察；只有用户明确要求时才允许显式启用预先准备的洞察内容。
+          结论摘要只放元数据、核心结论、关键指标、关键图表和交付物索引；完整分析过程、证据和每节结论放在详情页。默认不生成大模型洞察；只有用户明确要求时才允许显式启用预先准备的洞察内容。
       - type: code
         source: |
           # 本 Notebook 导出素材；正式运行结束后在终端生成并审计报告。
+          # 生成器同时产出 final_analysis_report.md 与 analysis_detail.html。
           # 不在正在执行的 Notebook 内调用正式报告 CLI。
 
   - id: completion

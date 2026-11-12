@@ -27,8 +27,10 @@ stages:
     requires: []
     gates: [run_evidence]
   - id: reported
-    label: 最终报告已生成
-    requires: [reports/final/final_analysis_report.md]
+    label: 结论摘要与分析详情已生成
+    requires:
+      - reports/final/final_analysis_report.md
+      - reports/final/analysis_detail.html
     gates: [report_coverage, report_metrics, report_binding]
   - id: audited
     label: 交付审计通过

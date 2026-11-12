@@ -5,6 +5,7 @@ configs/database.yaml
 .ipynb_checkpoints/
 __pycache__/
 *.py[cod]
+.venv/
 .pytest_cache/
 .harness/status.yaml
 
@@ -28,3 +29,4 @@ reports/final/*
 !reports/final/.gitkeep
 !reports/final/final_report_structure.md
 !reports/final/final_analysis_report.md
+!reports/final/analysis_detail.html

@@ -129,9 +129,9 @@ python scripts/audit_project.py
 
 ### 3.6 `scripts/generate_final_report.py`
 
-**功能：** 根据配置中的报告素材生成最终报告；生成前核对正式运行、覆盖和产物指纹，生成后绑定报告与运行 ID。支持 `--project-root`；自定义输入输出必须与 `project.yaml` 声明一致。
+**功能：** 根据配置中的报告素材同时生成结论摘要和分析详情；生成前核对正式运行、覆盖和产物指纹，生成后把两份产物绑定到同一运行 ID。支持 `--project-root`、`--format` 和 `--with-insights`；自定义输入输出必须与 `project.yaml` 声明一致。
 
-**适用场景：** Notebook 已完成关键图表、结果表和报告输入素材导出后，生成最终交付报告。
+**适用场景：** Notebook 已完成关键图表、结果表、逐问题结论和分析过程素材导出后，生成最终交付报告。
 
 **默认输入：**
 
@@ -141,7 +141,8 @@ python scripts/audit_project.py
 
 **默认输出：**
 
-- `reports/final/final_analysis_report.md`
+- `reports/final/final_analysis_report.md`：只含元数据与运行 ID、核心结论、关键指标、关键图表和交付物索引。
+- `reports/final/analysis_detail.html`：完整分析过程、证据、图表、结果表、口径限制和每节结论。
 
 **常用命令：**
 
@@ -154,8 +155,18 @@ python scripts/generate_final_report.py
 ```bash
 python scripts/generate_final_report.py \
   --input reports/final/report_inputs.yaml \
-  --output reports/final/final_analysis_report.md
+  --output reports/final/final_analysis_report.md \
+  --detail-output reports/final/analysis_detail.html
 ```
+
+仅本地迭代其中一份产物：
+
+```bash
+python scripts/generate_final_report.py --format md
+python scripts/generate_final_report.py --format html
+```
+
+`--format md` 或 `--format html` 只用于开发迭代；正式交付必须运行默认的 `both`，否则审计会因缺少另一份产物或绑定失败而阻止交付。
 
 如用户明确要求渲染已准备好的洞察内容：
 
@@ -163,17 +174,21 @@ python scripts/generate_final_report.py \
 python scripts/generate_final_report.py --with-insights
 ```
 
+洞察内容渲染在分析详情中，不在结论摘要中展开。
+
 **是否必须由 Notebook 调用：** 否。该脚本可以单独运行，但输入素材应由 Notebook 或分析流程先生成。
 
-**是否会写文件：** 会写入 `reports/final/final_analysis_report.md`，如果输出文件已存在会覆盖。
+**是否会写文件：** 会写入 `reports/final/final_analysis_report.md` 和 `reports/final/analysis_detail.html`；如果文件已存在会覆盖。
 
 **安全与注意事项：**
 
 - 正式生成必须在无界面 Notebook 运行之后；不要在正在执行的 Notebook 内调用此 CLI。
 - 默认只呈现结果、图表、表格、口径和输出文件路径。
 - 默认不调用大模型，不自动生成洞察、归因或业务建议。
-- 只有显式传入 `--with-insights` 时，才会渲染 `report_inputs.yaml` 中已经写好的洞察文本。
+- 只有显式传入 `--with-insights` 时，才会在分析详情中渲染 `report_inputs.yaml` 中已经写好的洞察文本。
 - 运行前应检查 `report_inputs.yaml` 是否仍有“待填写”占位内容，以及是否包含不应进入报告的敏感明细信息。
+- 分析详情会引用 `reports/figures/` 和 `reports/tables/` 下的文件；交付前应确认这些文件存在且已脱敏。
+- 两份产物生成后不应手工修改，否则报告绑定校验会失败。
 
 ## 4. 新增脚本登记模板
 

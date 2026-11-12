@@ -25,6 +25,8 @@ properties:
     type: [string, 'null']
   git_commit:
     type: [string, 'null']
+  python_version:
+    type: [string, 'null']
   error:
     type: [string, 'null']
   checks: {type: array}

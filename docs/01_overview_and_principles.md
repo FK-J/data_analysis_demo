@@ -47,13 +47,13 @@ docs/analysis_framework.md
 
 如果用户提出新的分析需求，必须先判断是否影响 `docs/analysis_framework.md`。如果影响，必须先更新该文档，再同步修改 Notebook、SQL、Python 和报告。
 
-在进入具体分析前，还应基于业务分析框架确认最终报告呈现结构，并保存到：
+在进入具体分析前，还应基于业务分析框架确认结论摘要和分析详情的呈现结构，并保存到：
 
 ```text
 reports/final/final_report_structure.md
 ```
 
-该文件用于说明报告汇总结果、各业务问题章节、每节分析逻辑和预期呈现的图表/表格。
+该文件用于说明结论摘要保留哪些内容、分析详情如何组织各业务问题章节、每节结论、分析逻辑和预期呈现的图表/表格。
 
 ### 4.2 可复现优先
 
@@ -65,7 +65,7 @@ reports/final/final_report_structure.md
 - Notebook 不依赖未记录的手动操作。
 - 所有核心数据处理逻辑可以追溯到 SQL 文件、Python 脚本或 Notebook cell。
 - 所有最终图表、结果表和报告文件均落地保存到 `reports/` 目录。
-- 最终报告由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 生成。
+- 最终报告由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 同时生成结论摘要 Markdown 和分析详情 HTML。
 
 ### 4.3 口径明确
 
@@ -135,7 +135,7 @@ docs/09_change_management_standard.md
 
 - 用户的问题和目标。
 - 业务背景、决策目标和业务拆解框架。
-- 最终报告呈现结构。
+- 结论摘要和分析详情的呈现结构。
 - 数据来源和可访问方式。
 - 是否需要连接数据库。
 - 是否需要执行 SQL。
@@ -196,13 +196,13 @@ docs/template_usage.md
 → 创建并校验 project.yaml
 → 根据项目配置生成主 Notebook
 → 确认业务分析框架
-→ 确认最终报告结构
+→ 确认结论摘要和分析详情结构
 → 创建变更执行记录
 → 贯穿记录使用问题和框架改进建议
 → 使用主 Notebook 迭代分析
 → 沉淀 SQL、Python 和脚本目录
 → 导出图表、结果表和 report_inputs.yaml
-→ 运行报告生成脚本
+→ 生成结论摘要和分析详情
 → 运行配置校验、无界面复现和交付审计
 → 按审计清单交付
 ```

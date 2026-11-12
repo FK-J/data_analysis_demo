@@ -24,6 +24,18 @@ def write_notebook(notebook: Any, destination: Path) -> None:
         nbformat.write(notebook, file)
 
 
+def config_digest(config: dict[str, Any]) -> str:
+    """Return the canonical project-config digest recorded in Notebook metadata."""
+    return hashlib.sha256(
+        json.dumps(config, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
+def template_digest(path: str | Path) -> str:
+    """Return the digest of a Notebook section template file."""
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
 def _section_enabled(section: dict[str, Any], config: dict[str, Any]) -> bool:
     requirements = section.get("requires") or []
     return all(bool(get_dotted_value(config, requirement)) for requirement in requirements)
@@ -74,9 +86,7 @@ def generate_notebook(
             else:
                 notebook.cells.append(nbformat.v4.new_markdown_cell(source=source, metadata=metadata))
 
-    config_digest = hashlib.sha256(
-        json.dumps(config, ensure_ascii=False, sort_keys=True).encode("utf-8")
-    ).hexdigest()
+    config_hash = config_digest(config)
     notebook.metadata.update(
         {
             "kernelspec": {
@@ -88,9 +98,10 @@ def generate_notebook(
             "harness": {
                 "generated": True,
                 "schema_version": 1,
-                "project_config_digest": config_digest,
+                "project_config_digest": config_hash,
                 "sections": section_ids,
                 "template": source_path.relative_to(root).as_posix(),
+                "template_digest": template_digest(source_path),
             },
         }
     )

@@ -32,7 +32,7 @@ docs/change_execution_log.md
 
 1. 明确业务背景、决策目标、核心业务问题、预期使用者和交付形式。
 2. 基于 `docs/analysis_framework_template.md` 创建 `docs/analysis_framework.md`，并与用户确认业务分析框架。
-3. 基于 `docs/final_report_structure_template.md` 创建 `reports/final/final_report_structure.md`，并与用户确认最终报告呈现结构。
+3. 基于 `docs/final_report_structure_template.md` 创建 `reports/final/final_report_structure.md`，并与用户确认结论摘要和分析详情的呈现结构。
 4. 配置 `configs/analysis_config.yaml`，并在 `docs/change_execution_log.md` 中创建项目初始化记录。
 5. 查看或初始化 `docs/framework_issue_log.md`，仅作为框架、模板、工具和流程缺陷入口。
 6. 如需连接数据库，复制 `configs/database.example.yaml` 为本地不提交的 `configs/database.yaml`。
@@ -40,7 +40,7 @@ docs/change_execution_log.md
 8. 在 `notebooks/main_analysis.ipynb` 中按章节执行数据加载、质量检查、清洗转换、探索分析、业务问题分析、可选统计或建模、稳健性检查和结果导出。
 9. 将复杂 SQL 沉淀到 `sql/`，复杂 Python 逻辑沉淀到 `src/`；如修改 `scripts/` 下的可执行脚本，同步更新 `docs/script_catalog.md`。
 10. 将关键图表、结果表和报告输入素材导出到标准目录。
-11. 从头到尾顺序运行主 Notebook，生成最终报告，再按 `docs/08_reproducibility_audit_checklists.md` 审计交付。
+11. 从头到尾顺序运行主 Notebook，生成结论摘要和分析详情，再按 `docs/08_reproducibility_audit_checklists.md` 审计交付。
 
 日常分析可以局部调试；每次受管变更关闭时必须运行到最远受影响产物，正式交付前必须完整运行。
 
@@ -113,7 +113,7 @@ python scripts/generate_notebook.py
 
 ## 4. 确认最终报告结构
 
-最终报告结构用于在分析前确认最终结果如何呈现。它应基于：
+最终报告结构用于在分析前确认结论摘要和分析详情两份产物如何呈现。它应基于：
 
 ```text
 docs/final_report_structure_template.md
@@ -125,16 +125,25 @@ docs/final_report_structure_template.md
 reports/final/final_report_structure.md
 ```
 
-报告结构应把汇总结果放在最前面，并为每个业务问题说明：
+结论摘要只确认：
+
+- 元数据与运行 ID。
+- 核心结论。
+- 关键指标。
+- 关键图表。
+- 交付物索引。
+
+分析详情为每个业务问题说明：
 
 - 本节目标。
+- 本节结论。
 - 具体分析逻辑。
-- 预期呈现的关键结果。
+- 分析过程、证据和呈现的关键结果。
 - 预期图表。
 - 预期结果表。
 - 需要说明的口径或限制。
 
-该文件只确认最终报告呈现内容，不负责生成洞察。
+该文件只确认报告呈现内容，不负责生成洞察。
 
 ## 5. 配置数据源
 
@@ -207,13 +216,13 @@ docs/script_catalog.md
 ```text
 reports/figures/    图表
 reports/tables/     结果表
-reports/final/      最终报告或交付材料
+reports/final/      结论摘要、分析详情或交付材料
 logs/               运行日志和审计记录
 ```
 
 关键结论不能只存在于 Notebook 输出缓存中，必须有可追溯的图表、结果表或报告文件。
 
-最终报告结构应参考：
+结论摘要和分析详情结构应参考：
 
 ```text
 docs/final_report_structure_template.md
@@ -231,7 +240,7 @@ reports/final/report_inputs.yaml
 docs/report_inputs_template.yaml
 ```
 
-最终报告由脚本生成：
+结论摘要和分析详情由同一次脚本执行生成：
 
 ```bash
 python scripts/generate_final_report.py
@@ -243,9 +252,10 @@ python scripts/generate_final_report.py
 
 ```text
 reports/final/final_analysis_report.md
+reports/final/analysis_detail.html
 ```
 
-报告默认只呈现结果、图表、表格、口径和输出文件路径，不自动生成洞察或业务解读。
+结论摘要只放元数据与运行 ID、核心结论、关键指标、关键图表和交付物索引；分析详情承载完整过程、证据和每节结论。两份产物默认只呈现结果，不自动生成洞察或业务解读。
 
 如需渲染已准备好的洞察内容，必须由用户明确要求，并显式运行：
 

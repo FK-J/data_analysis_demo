@@ -21,6 +21,7 @@ deliverables:
   figures: true
   tables: true
   final_report: true
+  detail_report: true
   insights: false
 
 runtime:
@@ -37,3 +38,4 @@ paths:
   report_structure: reports/final/final_report_structure.md
   report_inputs: reports/final/report_inputs.yaml
   final_report: reports/final/final_analysis_report.md
+  detail_report: reports/final/analysis_detail.html

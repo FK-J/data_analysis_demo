@@ -1,0 +1,17 @@
+# Tooling configuration only; the framework is used in place, not installed as a package.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+# Generated Notebook cells intentionally keep commented example imports.
+extend-exclude = ["notebooks", ".venv"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts must prepend the project root to sys.path before importing src.*
+"scripts/*.py" = ["E402"]

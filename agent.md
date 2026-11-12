@@ -14,7 +14,7 @@
 - 开始前必须读取并校验 `project.yaml`；它决定项目模式、数据源、可选 Notebook 章节和预期交付物。
 - 在正式读取数据、编写 SQL、建模或制图之前，必须先与用户确认业务分析框架。
 - 业务分析框架必须保存为 `docs/analysis_framework.md`，可基于 `docs/analysis_framework_template.md` 创建。
-- 在分析执行前，应同步确认最终报告呈现结构，并保存为 `reports/final/final_report_structure.md`。
+- 在分析执行前，应同步确认最终报告的结论摘要与分析详情结构，并保存为 `reports/final/final_report_structure.md`。
 - 后续用户提出新的分析需求时，必须先在 `docs/change_execution_log.md` 登记需求、等级、验收标准和影响范围。
 - 每次新建需求或修改既有需求，都必须在实施前同步更新 `docs/project_plan.yaml` 并生成 `docs/progress_summary.md`；通过 `scripts/update_progress.py --change-id ... --summary ... --tasks ...` 关联受影响任务，已完成的受影响任务及下游任务需重新验证。
 - 任务开始、阻塞、验收、取消或返工时更新计划；每次向用户汇报进度或关闭变更前刷新摘要。计划维护任务状态，变更日志维护需求执行记录，摘要由脚本生成，不手工维护第三套状态。
@@ -31,13 +31,13 @@
 - 可以通过 Python 直接连接数据库，但禁止硬编码真实账号、密码、密钥或生产库敏感配置。
 - Notebook 每个主要步骤必须写清楚目的、上游依赖、输入文件/对象、输出文件/对象、是否可缓存和调试提示。
 - 所有关键结果或结论必须可以追溯到数据、SQL、Python 脚本或 Notebook cell。
-- 最终报告在正式 Notebook 运行结束后，通过 `scripts/generate_final_report.py` 生成并绑定运行 ID；不在正在执行的 Notebook 内调用正式报告 CLI。默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
+- 最终报告在正式 Notebook 运行结束后，通过 `scripts/generate_final_report.py` 同时生成结论摘要 `reports/final/final_analysis_report.md` 和分析详情 `reports/final/analysis_detail.html`，并绑定同一运行 ID；不在正在执行的 Notebook 内调用正式报告 CLI。结论摘要只放元数据、核心结论、关键指标、关键图表和交付物索引；完整分析过程、证据和每节结论放在分析详情。默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
 - 交付前必须依次通过 `scripts/validate_project.py`、`scripts/run_notebook.py` 和 `scripts/audit_project.py`。
 - 自动化脚本只用于生成与验收，不得绕过主 Notebook 形成第二套分析流程。
 
 核心目标：
 
-> 每个项目必须先形成 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`，再通过 `notebooks/main_analysis.ipynb` 从上到下完整复现，并最终由 `scripts/generate_final_report.py` 生成结果呈现型报告。
+> 每个项目必须先形成 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`，再通过 `notebooks/main_analysis.ipynb` 从上到下完整复现，并最终由 `scripts/generate_final_report.py` 生成结论摘要（Markdown）和分析详情（HTML）两份结果呈现型报告。
 
 后续修改必须按 `docs/09_change_management_standard.md` 完成登记、影响判断、重跑、校验和产物同步。
 
@@ -66,9 +66,10 @@
 | [change_execution_log.md](docs/change_execution_log.md) | 每次修改的需求、执行范围、完成情况和风险记录。 | 不替代业务框架、报告结构或问题根因记录。 |
 | [script_catalog.md](docs/script_catalog.md) | 可直接执行脚本的功能、输入、输出、命令示例和安全注意事项。 | 不记录 `src/` 下只能被 import 的辅助模块。 |
 | [analysis_framework_template.md](docs/analysis_framework_template.md) | 具体项目业务分析框架模板，承载业务问题、假设、边界和需求变更记录。 | 不替代最终报告结构。 |
-| [final_report_structure_template.md](docs/final_report_structure_template.md) | 具体项目最终报告结构模板，分析前确认章节、逻辑、图表和表格计划。 | 不承载最终分析结果。 |
+| [final_report_structure_template.md](docs/final_report_structure_template.md) | 具体项目最终报告结构模板，分析前确认结论摘要与分析详情两份产物的章节、逻辑、图表和表格计划。 | 不承载最终分析结果。 |
 | [report_inputs_template.yaml](docs/report_inputs_template.yaml) | 报告生成脚本的结构化输入模板。 | 不定义业务分析框架。 |
-| [final_analysis_report_template.md](docs/final_analysis_report_template.md) | 最终报告成品的结构说明，指导脚本生成 `final_analysis_report.md`。 | 不作为项目分析前的报告方案确认稿。 |
+| [final_analysis_report_template.md](docs/final_analysis_report_template.md) | 结论摘要的结构说明，指导脚本生成 `final_analysis_report.md`。 | 不作为项目分析前的报告方案确认稿，不承载详细分析过程。 |
+| [analysis_detail_report_template.md](docs/analysis_detail_report_template.md) | 分析详情 HTML 的结构、锚点、安全和技术要求。 | 不替代结论摘要，也不承载业务分析框架。 |
 | [project_readme_template.md](docs/project_readme_template.md) | 具体项目 README 模板。 | 不作为本模板仓库的入口说明。 |
 
 ## 3. 推荐阅读顺序
@@ -84,6 +85,8 @@ agent.md
 → docs/framework_issue_log.md
 → docs/analysis_framework_template.md
 → docs/final_report_structure_template.md
+→ docs/final_analysis_report_template.md
+→ docs/analysis_detail_report_template.md
 → docs/03_main_notebook_standard.md
 → docs/04_python_sql_database_standard.md
 → docs/script_catalog.md
@@ -119,7 +122,7 @@ agent.md
 - 已发现的框架、模板、工具或流程缺陷已记录到 `docs/framework_issue_log.md` 并关联 `change_id`。
 - 变更已运行到最远受影响产物，检查项和剩余风险已记录。
 - 关键图表和结果表已导出到 `reports/`。
-- 启用最终报告时，由脚本生成并通过报告验收，默认只呈现结果、图表、表格、口径和限制。
+- 启用最终报告时，由脚本同时生成结论摘要 Markdown 和分析详情 HTML，并通过报告验收；结论摘要只放元数据、核心结论、关键指标、关键图表和交付物索引，其余内容放在分析详情，详情每个部分必须有本节结论。
 - 不包含真实数据库密码、密钥、token 或敏感明细数据。
 - 最近一次无界面 Notebook 执行通过，交付审计没有失败项。
 

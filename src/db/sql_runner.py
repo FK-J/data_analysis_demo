@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import time
 from pathlib import Path
 from typing import Any
@@ -18,25 +17,37 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("Missing dependency SQLAlchemy. Install it with: pip install SQLAlchemy") from exc
 
+from ..project_harness.config import resolve_project_path as _resolve_project_path
+from ..project_harness.sql_policy import (
+    contains_multiple_statements,
+    contains_write_statement,
+    is_read_query,
+    normalize_sql_for_safety,
+    strip_sql_comments,
+    strip_sql_strings,
+)
+
+__all__ = [
+    "contains_multiple_statements",
+    "contains_write_statement",
+    "execute_statement_file",
+    "is_read_query",
+    "normalize_sql_for_safety",
+    "read_sql_file",
+    "resolve_project_path",
+    "run_query_file",
+    "run_query_with_metadata",
+    "strip_sql_comments",
+    "strip_sql_strings",
+]
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-WRITE_SQL_PATTERN = re.compile(
-    r"\b(insert|update|delete|drop|truncate|create|alter|replace|merge|grant|revoke)\b",
-    re.IGNORECASE,
-)
-READ_SQL_PATTERN = re.compile(r"^(select|with)\b", re.IGNORECASE)
-BLOCK_COMMENT_PATTERN = re.compile(r"/\*.*?\*/", re.DOTALL)
-LINE_COMMENT_PATTERN = re.compile(r"(--|#).*?$", re.MULTILINE)
-SINGLE_QUOTED_STRING_PATTERN = re.compile(r"'(?:''|[^'])*'")
-DOUBLE_QUOTED_STRING_PATTERN = re.compile(r'"(?:""|[^"])*"')
 
 
 def resolve_project_path(path: str | Path) -> Path:
-    """Resolve a path relative to the project root."""
-    resolved = Path(path)
-    if not resolved.is_absolute():
-        resolved = PROJECT_ROOT / resolved
-    return resolved
+    """Resolve a path against the project root and reject paths outside it."""
+    return _resolve_project_path(PROJECT_ROOT, path)
 
 
 def read_sql_file(sql_file: str | Path, encoding: str = "utf-8") -> str:
@@ -45,44 +56,6 @@ def read_sql_file(sql_file: str | Path, encoding: str = "utf-8") -> str:
     if not path.exists():
         raise FileNotFoundError(f"SQL file not found: {path}")
     return path.read_text(encoding=encoding)
-
-
-def strip_sql_comments(sql_text: str) -> str:
-    """Remove SQL comments before safety checks."""
-    without_block_comments = BLOCK_COMMENT_PATTERN.sub(" ", sql_text)
-    return LINE_COMMENT_PATTERN.sub(" ", without_block_comments)
-
-
-def strip_sql_strings(sql_text: str) -> str:
-    """Remove quoted strings before keyword-based safety checks."""
-    without_single_quotes = SINGLE_QUOTED_STRING_PATTERN.sub("''", sql_text)
-    return DOUBLE_QUOTED_STRING_PATTERN.sub('""', without_single_quotes)
-
-
-def normalize_sql_for_safety(sql_text: str) -> str:
-    """Prepare SQL text for conservative keyword checks."""
-    without_strings = strip_sql_strings(sql_text)
-    without_comments = strip_sql_comments(without_strings)
-    return without_comments.strip()
-
-
-def contains_write_statement(sql_text: str) -> bool:
-    """Return True when SQL appears to contain write or DDL statements."""
-    return bool(WRITE_SQL_PATTERN.search(normalize_sql_for_safety(sql_text)))
-
-
-def is_read_query(sql_text: str) -> bool:
-    """Return True when SQL starts with SELECT or WITH after comments are removed."""
-    normalized = normalize_sql_for_safety(sql_text)
-    return bool(READ_SQL_PATTERN.search(normalized))
-
-
-def contains_multiple_statements(sql_text: str) -> bool:
-    """Return True when SQL contains more than one statement."""
-    normalized = normalize_sql_for_safety(sql_text).rstrip()
-    while normalized.endswith(";"):
-        normalized = normalized[:-1].rstrip()
-    return ";" in normalized
 
 
 def run_query_file(

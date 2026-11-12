@@ -169,20 +169,8 @@ def _build_sqlite_url(config: dict[str, Any]) -> URL:
     return URL.create(drivername="sqlite", database=database)
 
 
-def create_engine_from_profile(
-    config_path: str | Path | None = None,
-    profile: str | None = None,
-    **overrides: Any,
-) -> Engine:
-    """Create a SQLAlchemy engine from a configured database profile.
-
-    Supported dialects:
-    - mysql
-    - sqlite
-    """
-    config = load_database_config(config_path=config_path, profile=profile)
-    config.update({key: value for key, value in overrides.items() if value is not None})
-
+def _create_engine_from_config(config: dict[str, Any]) -> Engine:
+    """Build an engine from an already loaded and expanded profile."""
     dialect = str(config.get("dialect", "mysql")).lower()
     echo = bool(config.get("echo", False))
 
@@ -218,6 +206,22 @@ def create_engine_from_profile(
     )
 
 
+def create_engine_from_profile(
+    config_path: str | Path | None = None,
+    profile: str | None = None,
+    **overrides: Any,
+) -> Engine:
+    """Create a SQLAlchemy engine from a configured database profile.
+
+    Supported dialects:
+    - mysql
+    - sqlite
+    """
+    config = load_database_config(config_path=config_path, profile=profile)
+    config.update({key: value for key, value in overrides.items() if value is not None})
+    return _create_engine_from_config(config)
+
+
 def create_mysql_engine(
     config_path: str | Path | None = None,
     profile: str | None = None,
@@ -226,8 +230,10 @@ def create_mysql_engine(
     """Create a SQLAlchemy engine for a MySQL database profile."""
     config = load_database_config(config_path=config_path, profile=profile)
     config.update({key: value for key, value in overrides.items() if value is not None})
-    _validate_mysql_config(config)
-    return create_engine_from_profile(config_path=config_path, profile=profile, **overrides)
+    dialect = str(config.get("dialect", "mysql")).lower()
+    if dialect != "mysql":
+        raise ValueError(f"This project connection helper only supports MySQL, got dialect={dialect!r}.")
+    return _create_engine_from_config(config)
 
 
 def test_connection(engine: Engine) -> dict[str, Any]:

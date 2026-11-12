@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import platform
 import subprocess
 import traceback
 from datetime import datetime, timezone
@@ -54,6 +55,17 @@ def _write_manifest(path: Path, manifest: dict[str, Any], root: Path) -> None:
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def success_stage_updates(config: dict[str, Any]) -> dict[str, Any]:
+    """Return the status transition a successful run may claim.
+
+    Template mode has no business stage evidence, so it only records the run
+    itself instead of pretending the ``validated`` stage passed.
+    """
+    if config["project"]["mode"] != "project":
+        return {}
+    return {"current_stage": "validated", "completed_stage": "validated"}
+
+
 def execute_notebook(
     project_root: str | Path,
     *,
@@ -85,6 +97,7 @@ def execute_notebook(
         "notebook": notebook_path.relative_to(root).as_posix(),
         "executed_notebook": executed_path.relative_to(root).as_posix(),
         "git_commit": _git_commit(root),
+        "python_version": platform.python_version(),
         "error": None,
         "checks": preflight_checks or [],
         "artifacts": [],
@@ -120,13 +133,6 @@ def execute_notebook(
             raise ValueError("Registered inputs, code or contracts changed during execution; rerun with stable inputs.")
         manifest["status"] = "passed"
         manifest["artifacts"].append(executed_path.relative_to(root).as_posix())
-        update_status(
-            root,
-            current_stage="validated",
-            completed_stage="validated",
-            last_run_id=run_id,
-            last_run_status="passed",
-        )
     except Exception as exc:
         manifest["status"] = "failed"
         manifest["error"] = "".join(traceback.format_exception_only(type(exc), exc)).strip()
@@ -141,5 +147,14 @@ def execute_notebook(
             update_status(root, last_run_id=run_id, last_run_status="failed")
         manifest["finished_at"] = _timestamp()
         _write_manifest(manifest_path, manifest, root)
+
+    # Claim the validated stage only after the manifest records every artifact.
+    if manifest["status"] == "passed":
+        update_status(
+            root,
+            last_run_id=run_id,
+            last_run_status="passed",
+            **success_stage_updates(config),
+        )
 
     return {"manifest": manifest, "manifest_path": manifest_path, "executed_notebook": executed_path}

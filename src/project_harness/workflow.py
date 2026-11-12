@@ -5,7 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .config import ConfigError, load_yaml, resolve_project_path
+from .config import (
+    ConfigError,
+    detail_report_enabled,
+    detail_report_path,
+    load_yaml,
+    resolve_project_path,
+)
 from .contracts import check_report_coverage, check_report_metrics, is_complete, load_contracts
 from .validation import CheckResult, check
 
@@ -32,9 +38,18 @@ def evaluate_stage(root: Path, config: dict[str, Any], stage: str) -> list[Check
                 "reports/final/final_report_structure.md": config["paths"]["report_structure"],
                 "reports/final/report_inputs.yaml": config["paths"]["report_inputs"],
                 "reports/final/final_analysis_report.md": config["paths"]["final_report"],
+                "reports/final/analysis_detail.html": detail_report_path(config),
             }
             relative = aliases.get(relative, relative)
-            if relative in {config["paths"]["report_inputs"], config["paths"]["report_structure"], config["paths"]["final_report"]} and not config["deliverables"]["final_report"]:
+            managed_reports = {
+                config["paths"]["report_inputs"],
+                config["paths"]["report_structure"],
+                config["paths"]["final_report"],
+                detail_report_path(config),
+            }
+            if relative in managed_reports and not config["deliverables"]["final_report"]:
+                continue
+            if relative == detail_report_path(config) and not detail_report_enabled(config):
                 continue
             path = resolve_project_path(root, relative)
             results.append(check("stage_artifact", "pass" if path.is_file() else "fail", f"{definition['id']}: required evidence.", relative))
@@ -70,7 +85,7 @@ def evaluate_stage(root: Path, config: dict[str, Any], stage: str) -> list[Check
                 for metric in contracts["metrics"]:
                     results.append(check("metric_contract", "pass" if is_complete(metric) else "fail", f"{metric['id']}: grain, population, numerator, denominator, window and version.", category="analysis"))
             elif gate in {"data_checks", "analysis_checks"}:
-                from src.quality import run_table_checks
+                from ..quality import run_table_checks
                 results.extend(run_table_checks(root, contracts["checks"], category="data" if gate == "data_checks" else "analysis"))
             elif gate == "report_coverage":
                 results.extend(check_report_coverage(root, config, contracts))

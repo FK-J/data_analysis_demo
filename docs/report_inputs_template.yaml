@@ -1,5 +1,8 @@
 # 复制本文件为 reports/final/report_inputs.yaml，并填入 Notebook/脚本导出的结果素材。
-# scripts/generate_final_report.py 默认只呈现本文件中的结果，不自动生成洞察或业务解读。
+# scripts/generate_final_report.py 默认生成两份产物：
+# - reports/final/final_analysis_report.md：只放元数据、核心结论、关键指标、关键图表和交付物索引；
+# - reports/final/analysis_detail.html：放完整分析过程、证据、图表、结果表、口径和每节结论。
+# 脚本只呈现本文件中的结果，不自动生成洞察或业务解读。
 
 project:
   name: 数据分析项目
@@ -9,10 +12,12 @@ project:
   notebook_path: notebooks/main_analysis.ipynb
 
 summary:
-  section_goal: 汇总本次分析最重要的结果。
+  section_goal: 汇总本次分析最重要的结果和结论。
+  conclusions:
+    - 待填写核心结论一（引用注册指标 ID）。
+    - 待填写核心结论二。
   key_results:
-    - 待填写核心结果一。
-    - 待填写核心结果二。
+    - 待填写支撑核心结论的关键结果。
   metrics:
     - id: 待填写项目契约中的指标ID
       name: 待填写指标
@@ -25,31 +30,74 @@ summary:
         tolerance: 0
       note: 待填写口径说明
   figures:
-    - title: 待填写图表标题
+    - title: 待填写关键图表标题
       path: reports/figures/example.png
       note: 待填写图表说明
   tables:
-    - title: 待填写表格标题
+    - title: 待填写关键结果表标题
       path: reports/tables/example.csv
-      note: 待填写表格说明
+      note: 待填写结果表说明
 
 business_questions:
   - id: Q1
     title: 待填写业务问题一
     section_goal: 待填写本节目标
+    conclusions:
+      - 待填写本节结论（必须能追溯到证据或结果表）
     analysis_logic: 待填写本节具体分析逻辑
+    process_steps:
+      - title: 待填写分析步骤标题
+        method: 待填写本步骤使用的方法、口径或筛选条件
+        evidence:
+          - reports/tables/example.csv
+        finding: 待填写本步骤得到的结果或判断
     key_results:
       - 待填写关键结果
+    metrics:
+      - id: 待填写本问题使用的指标ID
+        name: 待填写指标
+        value: 0
+        format: number
+        source:
+          path: reports/tables/example.csv
+          column: 待填写结果表列名
+          row: 0
+          tolerance: 0
+        note: 待填写口径说明
     figures:
       - title: 待填写图表标题
         path: reports/figures/q1_example.png
         note: 待填写图表说明
     tables:
-      - title: 待填写表格标题
+      - title: 待填写结果表标题
         path: reports/tables/q1_example.csv
-        note: 待填写表格说明
+        note: 待填写结果表说明
     notes:
       - 待填写口径、限制或补充说明
+
+# 跨业务问题的过程章节：数据质量、清洗、EDA、稳健性、方法假设等。
+# 可选；未提供时 HTML 仍会呈现 summary 和 business_questions 中的内容。
+detail:
+  sections:
+    - id: D1
+      title: 数据质量与清洗
+      conclusions:
+        - 待填写本节结论
+      content:
+        - 待填写检查范围、清洗规则和数据量变化
+      steps:
+        - title: 待填写检查或清洗步骤
+          method: 待填写方法、规则或阈值
+          evidence:
+            - reports/tables/data_quality_summary.csv
+          finding: 待填写检查结果
+      figures: []
+      tables:
+        - title: 数据质量检查汇总
+          path: reports/tables/data_quality_summary.csv
+          note: 待填写结果表说明
+      notes:
+        - 待填写口径或限制
 
 appendix:
   data_scope:
@@ -58,6 +106,7 @@ appendix:
     - 待填写指标口径
   output_files:
     - reports/final/final_analysis_report.md
+    - reports/final/analysis_detail.html
 
 coverage:
   - id: Q1
@@ -65,6 +114,6 @@ coverage:
     reason: 待填写实现或不适用原因
 
 insights:
-  # 默认不渲染。只有运行脚本时显式传入 --with-insights 才会写入报告。
+  # 默认不渲染。只有运行脚本时显式传入 --with-insights 才会写入详情 HTML。
   enabled: false
   items: []

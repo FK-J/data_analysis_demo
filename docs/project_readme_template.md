@@ -48,15 +48,15 @@ docs/framework_issue_log.md
 reports/final/final_report_structure.md
 ```
 
-正式分析前，应先确认该文件，明确汇总结果和每个业务问题章节的呈现内容、分析逻辑、图表和表格清单。
+正式分析前，应先确认该文件，明确结论摘要保留的内容，以及分析详情中每个业务问题章节的本节结论、分析逻辑、图表和表格清单。
 
-最终报告由脚本生成：
+结论摘要和分析详情由同一次脚本执行生成：
 
 ```bash
 python scripts/generate_final_report.py
 ```
 
-正式交付前必须从头到尾顺序运行主 Notebook，再生成最终报告。
+正式交付前必须从头到尾顺序运行主 Notebook，再生成两份报告产物。
 
 默认不生成大模型洞察或业务解读。若需要渲染已准备好的洞察内容，应显式运行：
 
@@ -90,7 +90,7 @@ data/         数据分层目录
 sql/          SQL 文件
 src/          Python 可复用逻辑
 notebooks/    主分析 Notebook
-reports/      图表、结果表和最终报告
+reports/      图表、结果表、结论摘要和分析详情
 scripts/      项目生成、验证、复现、审计和报告脚本
 tests/        测试与校验
 logs/         运行日志
@@ -140,7 +140,7 @@ python scripts/generate_notebook.py
 notebooks/main_analysis.ipynb
 ```
 
-正式交付时应从头到尾运行主 Notebook，然后生成报告：
+正式交付时应从头到尾运行主 Notebook，然后生成结论摘要和分析详情：
 
 ```bash
 python scripts/generate_final_report.py
@@ -168,7 +168,7 @@ python scripts/audit_project.py
 | --- | --- |
 | reports/figures/ | 关键图表 |
 | reports/tables/ | 结果表 |
-| reports/final/ | 最终报告或交付材料 |
+| reports/final/ | 结论摘要、分析详情或交付材料 |
 
 报告输入素材：
 
@@ -176,13 +176,19 @@ python scripts/audit_project.py
 reports/final/report_inputs.yaml
 ```
 
-最终报告：
+结论摘要：
 
 ```text
 reports/final/final_analysis_report.md
 ```
 
-报告应基于 `reports/final/final_report_structure.md` 和 `reports/final/report_inputs.yaml` 生成。
+分析详情：
+
+```text
+reports/final/analysis_detail.html
+```
+
+两份产物应基于 `reports/final/final_report_structure.md` 和 `reports/final/report_inputs.yaml` 同一次生成，并绑定同一个运行 ID。
 
 ## 12. 结果摘要
 
@@ -207,8 +213,9 @@ reports/final/final_analysis_report.md
 - 分析必须基于已确认的业务分析框架。
 - 受管修改必须先更新 `docs/change_execution_log.md`，并运行到最远受影响产物。
 - 框架、模板、工具或流程缺陷应及时记录到 `docs/framework_issue_log.md`。
-- 最终报告结构必须在正式分析前确认。
-- 最终报告默认只呈现结果，不自动生成大模型洞察或业务解读。
+- 结论摘要和分析详情结构必须在正式分析前确认。
+- 结论摘要只放元数据与运行 ID、核心结论、关键指标、关键图表和交付物索引；完整过程放在分析详情。
+- 两份产物默认只呈现结果，不自动生成大模型洞察或业务解读。
 - 不提交真实数据库凭据。
 - 不提交未脱敏敏感数据。
 - Notebook 应可从上到下完整复现。

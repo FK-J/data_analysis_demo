@@ -7,7 +7,7 @@ import re
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 try:
     import nbformat
@@ -21,14 +21,11 @@ from .config import (
     validate_against_schema,
     validate_project_config,
 )
-from .notebook import DEFAULT_TEMPLATE, enabled_section_ids
+from .notebook import DEFAULT_TEMPLATE, config_digest, enabled_section_ids, template_digest
+from .sql_policy import contains_write_statement
 
 
 PLACEHOLDER_PATTERN = re.compile(r"待填写|\bTODO\b|\bTBD\b", re.IGNORECASE)
-WRITE_SQL_PATTERN = re.compile(
-    r"\b(insert|update|delete|drop|truncate|create|alter|replace|merge|grant|revoke)\b",
-    re.IGNORECASE,
-)
 
 
 @dataclass(frozen=True)
@@ -119,6 +116,7 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
             [
                 "docs/analysis_framework_template.md",
                 "docs/final_report_structure_template.md",
+                "docs/analysis_detail_report_template.md",
                 "docs/report_inputs_template.yaml",
             ]
         )
@@ -141,14 +139,37 @@ def _check_required_paths(root: Path, config: dict[str, Any]) -> list[CheckResul
 
 
 def _check_notebook(root: Path, config: dict[str, Any]) -> list[CheckResult]:
-    notebook_path = resolve_project_path(root, config["runtime"]["notebook"])
+    relative_notebook = config["runtime"]["notebook"]
+    notebook_path = resolve_project_path(root, relative_notebook)
     if not notebook_path.exists():
-        return [check("notebook_structure", "fail", "Main Notebook is missing.", config["runtime"]["notebook"])]
+        return [check("notebook_structure", "fail", "Main Notebook is missing.", relative_notebook)]
 
-    notebook = nbformat.read(notebook_path, as_version=4)
-    template = load_yaml(resolve_project_path(root, config["runtime"].get("notebook_template", DEFAULT_TEMPLATE)))
-    expected_sections = enabled_section_ids(config, template)
-    actual_sections = list(notebook.metadata.get("harness", {}).get("sections", []))
+    try:
+        notebook = nbformat.read(notebook_path, as_version=4)
+    except (OSError, ValueError, TypeError) as exc:
+        return [
+            check("notebook_structure", "fail", f"Main Notebook cannot be read: {exc}", relative_notebook),
+            check("notebook_sections", "fail", "Notebook sections cannot be verified.", relative_notebook),
+        ]
+
+    template_relative = config["runtime"].get("notebook_template", DEFAULT_TEMPLATE)
+    try:
+        template_path = resolve_project_path(root, template_relative)
+        template = load_yaml(template_path)
+        expected_sections = enabled_section_ids(config, template)
+        current_template_digest = template_digest(template_path)
+    except (OSError, ValueError, TypeError) as exc:
+        return [
+            check(
+                "notebook_sections",
+                "fail",
+                f"Notebook section template cannot be read: {exc}",
+                str(template_relative),
+            )
+        ]
+
+    harness = notebook.metadata.get("harness") or {}
+    actual_sections = list(harness.get("sections", []))
     results = [
         check(
             "notebook_sections",
@@ -156,18 +177,65 @@ def _check_notebook(root: Path, config: dict[str, Any]) -> list[CheckResult]:
             "Notebook sections match project.yaml."
             if actual_sections == expected_sections
             else f"Notebook sections are stale. Expected {expected_sections}, got {actual_sections}.",
-            config["runtime"]["notebook"],
+            relative_notebook,
         )
     ]
+
+    current_config_digest = config_digest(config)
+    recorded_config_digest = harness.get("project_config_digest")
+    if not recorded_config_digest:
+        results.append(
+            check(
+                "notebook_config_digest",
+                "warn",
+                "Notebook has no project-config digest; regenerate it to enable staleness checks.",
+                relative_notebook,
+            )
+        )
+    else:
+        matches = recorded_config_digest == current_config_digest
+        results.append(
+            check(
+                "notebook_config_digest",
+                "pass" if matches else "fail",
+                "Notebook matches the current project.yaml."
+                if matches
+                else "project.yaml changed after the Notebook was generated; run scripts/generate_notebook.py.",
+                relative_notebook,
+            )
+        )
+
+    recorded_template_digest = harness.get("template_digest")
+    if not recorded_template_digest:
+        results.append(
+            check(
+                "notebook_template_digest",
+                "warn",
+                "Notebook has no template digest; regenerate it to enable staleness checks.",
+                relative_notebook,
+            )
+        )
+    else:
+        matches = recorded_template_digest == current_template_digest
+        results.append(
+            check(
+                "notebook_template_digest",
+                "pass" if matches else "fail",
+                "Notebook matches its section template."
+                if matches
+                else "The Notebook section template changed after generation; run scripts/generate_notebook.py.",
+                relative_notebook,
+            )
+        )
+
     code_source = "\n".join(cell.source for cell in notebook.cells if cell.cell_type == "code")
+    reuses_src = "from src." in code_source or "import src." in code_source
     results.append(
         check(
             "notebook_reuses_src",
-            "pass" if "from src." in code_source or "import src." in code_source else "fail",
-            "Notebook calls reusable logic from src/."
-            if "from src." in code_source or "import src." in code_source
-            else "Notebook must call reusable logic from src/.",
-            config["runtime"]["notebook"],
+            "pass" if reuses_src else "fail",
+            "Notebook calls reusable logic from src/." if reuses_src else "Notebook must call reusable logic from src/.",
+            relative_notebook,
         )
     )
     return results
@@ -195,14 +263,6 @@ def _check_placeholders(root: Path, config: dict[str, Any]) -> list[CheckResult]
     return results
 
 
-def _strip_sql_literals_and_comments(sql: str) -> str:
-    sql = re.sub(r"'(?:''|[^'])*'", "''", sql)
-    sql = re.sub(r'"(?:""|[^"])*"', '""', sql)
-    sql = re.sub(r"/\*.*?\*/", " ", sql, flags=re.DOTALL)
-    sql = re.sub(r"(--|#).*?$", " ", sql, flags=re.MULTILINE)
-    return sql
-
-
 def _check_sql_policy(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     analysis_config_path = resolve_project_path(root, config["runtime"]["analysis_config"])
     if not analysis_config_path.exists():
@@ -215,8 +275,7 @@ def _check_sql_policy(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     results: list[CheckResult] = []
     for path in sorted((root / "sql").rglob("*.sql")):
         relative = path.relative_to(root)
-        normalized = _strip_sql_literals_and_comments(path.read_text(encoding="utf-8"))
-        has_write = bool(WRITE_SQL_PATTERN.search(normalized))
+        has_write = contains_write_statement(path.read_text(encoding="utf-8"))
         results.append(
             check(
                 "readonly_sql",

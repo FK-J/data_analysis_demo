@@ -22,6 +22,16 @@ changes:
   - P02
   - P03
   request_fingerprint: 79281dc7a4549ab45b9fcb68b52691dc06b0add18602bb59d274884faaef1b8e
+- id: CHANGE-20261104-01
+  summary: 拆分结论摘要与分析详情两份报告产物
+  task_ids:
+  - H04
+  request_fingerprint: 2e4f886134a4670c41c035ce0c8e3d9208ba5e5497669bb3cd4e8751e95ca055
+- id: CHANGE-20261111-01
+  summary: 框架质量与可复现性加固
+  task_ids:
+  - H05
+  request_fingerprint: 8a4a9c2f96d7a98f8f95b7a959dfea3314a022451ac13679911c1a5f2008258c
 tasks:
 - id: H01
   title: 完善后续修改工作流
@@ -98,5 +108,34 @@ tasks:
   acceptance: 针对性测试、完整回归、模板运行及审计通过
   evidence: 51 项完整回归通过；主 Notebook 运行 20261013T101035Z-8e50be2f 通过；模板校验 36 项通过；模板审计
     36 项通过、0 失败
+  blocker: ''
+  next_action: ''
+- id: H04
+  title: 拆分结论摘要与分析详情两份报告产物
+  stage: reported
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - src/reporting/report.py
+  - scripts/generate_final_report.py
+  - docs/analysis_detail_report_template.md
+  acceptance: 结论摘要只含元数据、核心结论、关键指标、关键图表和交付物索引；分析详情每节有结论；两份产物绑定同一运行 ID 且篡改可被审计发现
+  evidence: 54 项测试通过；完整项目流程生成双产物并通过绑定、链接和篡改审计；模板运行 20261110T091325Z-1e5cb527 通过；模板校验
+    37 项、审计 37 项通过、0 失败
+  blocker: ''
+  next_action: ''
+- id: H05
+  title: 框架质量门禁与可复现性加固
+  stage: audited
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - src/project_harness/sql_policy.py
+  - tests/test_harness_quality.py
+  - pyproject.toml
+  acceptance: 阶段语义、检查分类、校验器健壮性、进度摘要机制、SQL 与资产遍历去重、测试与 CI 全部完成并回归通过
+  evidence: 68 项回归通过；模板校验 39 项、审计 39 项通过、0 失败；新增 SQL 策略、检查分类、Notebook 陈旧检测、克隆状态与模板模式阶段回归测试
   blocker: ''
   next_action: ''

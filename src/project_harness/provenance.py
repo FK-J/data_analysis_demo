@@ -5,9 +5,16 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
-from .config import ConfigError, load_yaml, resolve_project_path
+from .config import (
+    ConfigError,
+    detail_report_enabled,
+    detail_report_path,
+    load_yaml,
+    resolve_project_path,
+    validate_against_schema,
+)
 from .contracts import load_contracts
 from .validation import CheckResult, check
 
@@ -20,9 +27,25 @@ def file_digest(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _digest_paths(root: Path, relatives: Iterable[str]) -> dict[str, str]:
+    """Fingerprint every readable project file among the given paths."""
+    fingerprints: dict[str, str] = {}
+    for relative in sorted(set(relatives)):
+        path = resolve_project_path(root, relative)
+        if path.is_file():
+            fingerprints[relative] = file_digest(path)
+    return fingerprints
+
+
 def input_fingerprints(root: Path, config: dict[str, Any]) -> dict[str, str]:
-    paths = {"project.yaml", config["runtime"]["analysis_config"], config["runtime"]["notebook"],
-             config["runtime"].get("notebook_template", "templates/notebook_sections.yaml"), ".harness/workflow.yaml"}
+    paths = {
+        "project.yaml",
+        "requirements.txt",
+        config["runtime"]["analysis_config"],
+        config["runtime"]["notebook"],
+        config["runtime"].get("notebook_template", "templates/notebook_sections.yaml"),
+        ".harness/workflow.yaml",
+    }
     for directory, pattern in (("src", "*.py"), ("scripts", "*.py"), ("sql", "*.sql"), ("schemas", "*.yaml")):
         paths.update(path.relative_to(root).as_posix() for path in (root / directory).rglob(pattern))
     for key in ("analysis_framework", "report_structure", "contracts"):
@@ -32,11 +55,10 @@ def input_fingerprints(root: Path, config: dict[str, Any]) -> dict[str, str]:
         contracts = load_contracts(root, config)
         paths.update(item["path"] for item in contracts["sources"] if item.get("path") and item["status"] != "excluded")
     # Templates may lack concrete business documents; a concrete project must register readable snapshots.
-    return {relative: file_digest(resolve_project_path(root, relative)) for relative in sorted(paths)
-            if resolve_project_path(root, relative).is_file()}
+    return _digest_paths(root, paths)
 
 
-def asset_paths(value: Any):
+def asset_paths(value: Any) -> Iterable[str]:
     """Traverse ordinary and project-specific figure/table/coverage declarations."""
     if isinstance(value, dict):
         for key, child in value.items():
@@ -66,8 +88,7 @@ def output_fingerprints(root: Path, config: dict[str, Any], executed: Path) -> d
             paths.add(rule["table"])
             if rule.get("other_table"):
                 paths.add(rule["other_table"])
-    return {relative: file_digest(resolve_project_path(root, relative)) for relative in sorted(paths)
-            if resolve_project_path(root, relative).is_file()}
+    return _digest_paths(root, paths)
 
 
 def latest_run(root: Path) -> tuple[Path, dict[str, Any]]:
@@ -122,15 +143,29 @@ def verify_run(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     return results
 
 
-def bind_report(root: Path, config: dict[str, Any], output: Path) -> str:
+def bind_report(root: Path, config: dict[str, Any], outputs: Path | list[Path]) -> str:
+    """Bind every delivered report artifact to the current formal run."""
     checks = verify_run(root, config)
     if any(item.status in {"fail", "unverified"} for item in checks):
         raise ConfigError("Report requires a successful matching run: " + "; ".join(item.message for item in checks if item.status != "pass"))
     path, manifest = latest_run(root)
-    relative = output.relative_to(root).as_posix()
-    manifest.setdefault("report_fingerprints", {})[relative] = file_digest(output)
-    if relative not in manifest["artifacts"]:
-        manifest["artifacts"].append(relative)
+    candidates = [outputs] if isinstance(outputs, (str, Path)) else list(outputs)
+    if not candidates:
+        raise ConfigError("At least one report artifact must be bound to the formal run.")
+    for item in candidates:
+        output = Path(item).resolve()
+        try:
+            relative = output.relative_to(root).as_posix()
+        except ValueError as exc:
+            raise ConfigError(f"Report artifact must stay inside the project root: {item}") from exc
+        manifest.setdefault("report_fingerprints", {})[relative] = file_digest(output)
+        if relative not in manifest["artifacts"]:
+            manifest["artifacts"].append(relative)
+    validate_against_schema(
+        manifest,
+        root / "schemas/run_manifest.schema.yaml",
+        label="run manifest",
+    )
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return manifest["run_id"]
 
@@ -138,12 +173,29 @@ def bind_report(root: Path, config: dict[str, Any], output: Path) -> str:
 def verify_report(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     try:
         _, manifest = latest_run(root)
-        relative = config["paths"]["final_report"]
-        path = resolve_project_path(root, relative)
-        digest = manifest.get("report_fingerprints", {}).get(relative)
-        valid = bool(digest) and path.is_file() and file_digest(path) == digest
-        if valid:
-            valid = f"- 运行 ID：`{manifest['run_id']}`" in path.read_text(encoding="utf-8")
-        return [check("report_binding", "pass" if valid else "fail", "Report belongs to this formal run." if valid else "Report is unbound, missing or changed after generation.", relative, category="report")]
+        if not config["deliverables"]["final_report"]:
+            return [check("report_binding", "pass", "Final report is not requested.", category="report")]
+        relative_paths = [config["paths"]["final_report"]]
+        if detail_report_enabled(config):
+            relative_paths.append(detail_report_path(config))
+        results = []
+        for relative in relative_paths:
+            path = resolve_project_path(root, relative)
+            digest = manifest.get("report_fingerprints", {}).get(relative)
+            valid = bool(digest) and path.is_file() and file_digest(path) == digest
+            if valid and path.suffix.lower() in {".html", ".htm"}:
+                valid = f'<meta name="dsh-run-id" content="{manifest["run_id"]}">' in path.read_text(encoding="utf-8")
+            elif valid:
+                valid = f"- 运行 ID：`{manifest['run_id']}`" in path.read_text(encoding="utf-8")
+            results.append(
+                check(
+                    "report_binding",
+                    "pass" if valid else "fail",
+                    f"{relative} belongs to this formal run." if valid else f"{relative} is unbound, missing or changed after generation.",
+                    relative,
+                    category="report",
+                )
+            )
+        return results
     except (OSError, ValueError, ConfigError, KeyError, TypeError) as exc:
         return [check("report_binding", "fail", str(exc), category="report")]

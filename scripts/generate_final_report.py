@@ -1,12 +1,12 @@
-"""Generate a result-only final analysis report from structured inputs.
+"""Generate the conclusion summary and the detailed analysis report.
 
 Default behavior is intentionally conservative:
-- render provided results, figures, tables, and notes;
-- do not generate business insights automatically;
-- do not call any large language model.
-
-Use --with-insights only when the user explicitly asks to include pre-written
-insight text from the input YAML.
+- the Markdown summary renders metadata, core conclusions, key metrics, key
+  figures and an index into the detailed HTML;
+- the HTML report renders the full analysis process, evidence, tables and
+  per-section conclusions;
+- no business insight is generated automatically and no large language model
+  is called.
 """
 
 from __future__ import annotations
@@ -27,23 +27,24 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.project_harness.config import ConfigError, resolve_project_path, validate_against_schema, validate_project_config
+from src.project_harness.config import (
+    ConfigError,
+    detail_report_enabled,
+    detail_report_path,
+    resolve_project_path,
+    validate_against_schema,
+    validate_project_config,
+)
 from src.project_harness.status import update_status
 from src.project_harness.provenance import bind_report, latest_run, verify_run
 from src.project_harness.contracts import check_report_coverage, check_report_metrics, load_contracts
 from src.project_harness.validation import PLACEHOLDER_PATTERN, ValidationReport, format_report, validate_project
+from src.reporting.report import render_detail_html, render_summary_markdown
 
 
 DEFAULT_INPUT = PROJECT_ROOT / "reports" / "final" / "report_inputs.yaml"
-DEFAULT_OUTPUT = PROJECT_ROOT / "reports" / "final" / "final_analysis_report.md"
-
-
-def resolve_path(path: str | Path) -> Path:
-    """Resolve a path relative to the project root."""
-    resolved = Path(path)
-    if not resolved.is_absolute():
-        resolved = PROJECT_ROOT / resolved
-    return resolved
+DEFAULT_SUMMARY_OUTPUT = PROJECT_ROOT / "reports" / "final" / "final_analysis_report.md"
+DEFAULT_DETAIL_OUTPUT = PROJECT_ROOT / "reports" / "final" / "analysis_detail.html"
 
 
 def load_report_inputs(input_path: Path, *, project_root: Path = PROJECT_ROOT) -> dict[str, Any]:
@@ -70,129 +71,8 @@ def load_report_inputs(input_path: Path, *, project_root: Path = PROJECT_ROOT) -
     return data
 
 
-def as_list(value: Any) -> list[Any]:
-    """Normalize a value to a list."""
-    if value is None:
-        return []
-    if isinstance(value, list):
-        return value
-    return [value]
-
-
-def render_bullets(items: Any, *, empty_text: str = "待填写") -> list[str]:
-    """Render a list of bullet lines."""
-    values = [str(item) for item in as_list(items) if str(item).strip()]
-    if not values:
-        return [f"- {empty_text}"]
-    return [f"- {item}" for item in values]
-
-
-def render_metrics(metrics: Any) -> list[str]:
-    """Render metric dictionaries as a Markdown table."""
-    rows = [item for item in as_list(metrics) if isinstance(item, dict)]
-    if not rows:
-        return ["| 指标 | 结果 | 说明 |", "| --- | --- | --- |", "| 待填写 | 待填写 | 待填写 |"]
-
-    lines = ["| 指标 | 结果 | 说明 |", "| --- | --- | --- |"]
-    for item in rows:
-        name = item.get("name", "")
-        value = item.get("value", "")
-        if item.get("format") == "percent":
-            value = f"{float(value):.2%}"
-        note = item.get("note", "")
-        lines.append(f"| {name} | {value} | {note} |")
-    return lines
-
-
-def render_assets(items: Any, *, label: str) -> list[str]:
-    """Render figure or table references."""
-    rows = [item for item in as_list(items) if isinstance(item, dict)]
-    if not rows:
-        return [f"- 暂无{label}"]
-
-    lines: list[str] = []
-    for item in rows:
-        title = item.get("title", "未命名")
-        path = item.get("path", "")
-        note = item.get("note", "")
-        suffix = f"：{note}" if note else ""
-        if path:
-            lines.append(f"- {title}：`{path}`{suffix}")
-        else:
-            lines.append(f"- {title}{suffix}")
-    return lines
-
-
-def append_section(lines: list[str], title: str, content: list[str]) -> None:
-    """Append a Markdown section with a blank line."""
-    lines.append(title)
-    lines.append("")
-    lines.extend(content)
-    lines.append("")
-
-
-def render_report(data: dict[str, Any], *, with_insights: bool) -> str:
-    """Render final report Markdown."""
-    project = data.get("project", {}) if isinstance(data.get("project"), dict) else {}
-    summary = data.get("summary", {}) if isinstance(data.get("summary"), dict) else {}
-    appendix = data.get("appendix", {}) if isinstance(data.get("appendix"), dict) else {}
-    questions = [item for item in as_list(data.get("business_questions")) if isinstance(item, dict)]
-
-    title = project.get("report_title") or project.get("name") or "数据分析报告"
-    generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    lines: list[str] = [
-        f"# {title}",
-        "",
-        f"- 生成时间：{generated_at}",
-        f"- 分析框架：`{project.get('analysis_framework_path', 'docs/analysis_framework.md')}`",
-        f"- 报告结构：`{project.get('report_structure_path', 'reports/final/final_report_structure.md')}`",
-        f"- 主 Notebook：`{project.get('notebook_path', 'notebooks/main_analysis.ipynb')}`",
-        "",
-        "本报告由 `scripts/generate_final_report.py` 根据结构化输入生成。默认只呈现结果，不自动生成洞察或业务解读。",
-        "",
-    ]
-
-    if project.get("run_id"):
-        lines.insert(3, f"- 运行 ID：`{project['run_id']}`")
-    lines.extend(["## 1. 汇总结果", ""])
-    append_section(lines, "### 本节目标", [str(summary.get("section_goal", "汇总本次分析最重要的结果。"))])
-    append_section(lines, "### 关键结果", render_bullets(summary.get("key_results")))
-    append_section(lines, "### 核心指标", render_metrics(summary.get("metrics")))
-    append_section(lines, "### 图表", render_assets(summary.get("figures"), label="图表"))
-    append_section(lines, "### 结果表", render_assets(summary.get("tables"), label="结果表"))
-
-    for index, question in enumerate(questions, start=2):
-        question_id = question.get("id", f"Q{index - 1}")
-        question_title = question.get("title", "待填写业务问题")
-        lines.extend([f"## {index}. {question_id}：{question_title}", ""])
-        append_section(lines, "### 本节目标", [str(question.get("section_goal", "待填写"))])
-        append_section(lines, "### 具体分析逻辑", [str(question.get("analysis_logic", "待填写"))])
-        append_section(lines, "### 关键结果", render_bullets(question.get("key_results")))
-        if question.get("metrics"):
-            append_section(lines, "### 核心指标", render_metrics(question["metrics"]))
-        append_section(lines, "### 图表", render_assets(question.get("figures"), label="图表"))
-        append_section(lines, "### 结果表", render_assets(question.get("tables"), label="结果表"))
-        append_section(lines, "### 口径与限制", render_bullets(question.get("notes")))
-
-    if with_insights:
-        insights = data.get("insights", {}) if isinstance(data.get("insights"), dict) else {}
-        lines.extend(["## 可选洞察", ""])
-        lines.append("以下内容仅在用户明确要求并传入 `--with-insights` 时渲染；本脚本不会自动调用大模型生成洞察。")
-        lines.append("")
-        lines.extend(render_bullets(insights.get("items"), empty_text="未提供洞察内容"))
-        lines.append("")
-
-    lines.extend(["## 附录", ""])
-    append_section(lines, "### 数据范围", render_bullets(appendix.get("data_scope")))
-    append_section(lines, "### 指标口径", render_bullets(appendix.get("metric_definitions")))
-    append_section(lines, "### 输出文件", render_bullets(appendix.get("output_files")))
-
-    return "\n".join(lines).rstrip() + "\n"
-
-
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate a result-only final analysis report.")
+    parser = argparse.ArgumentParser(description="Generate the conclusion summary and detailed analysis report.")
     parser.add_argument("--project-root", default=str(PROJECT_ROOT))
     parser.add_argument(
         "--input",
@@ -202,12 +82,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         default=None,
-        help="Path to output Markdown report. Defaults to reports/final/final_analysis_report.md.",
+        help="Path to the summary Markdown. Defaults to reports/final/final_analysis_report.md.",
+    )
+    parser.add_argument(
+        "--detail-output",
+        default=None,
+        help="Path to the detailed HTML. Defaults to reports/final/analysis_detail.html.",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["both", "md", "html"],
+        default="both",
+        help="Render both deliverables by default; use md or html for local iteration only.",
     )
     parser.add_argument(
         "--with-insights",
         action="store_true",
-        help="Render pre-written insights from input YAML. This does not call a large language model.",
+        help="Render pre-written insights in the detailed HTML. This does not call a large language model.",
     )
     return parser.parse_args()
 
@@ -216,12 +107,22 @@ def main() -> None:
     args = parse_args()
     root = Path(args.project_root).resolve()
     config = validate_project_config(root)
+    declared_summary = config["paths"]["final_report"]
+    declared_detail = detail_report_path(config)
     input_path = resolve_project_path(root, args.input or config["paths"]["report_inputs"])
-    output_path = resolve_project_path(root, args.output or config["paths"]["final_report"])
-    if input_path != resolve_project_path(root, config["paths"]["report_inputs"]) or output_path != resolve_project_path(root, config["paths"]["final_report"]):
-        raise ConfigError("Declare custom report paths in project.yaml so the report remains auditable.")
+    summary_path = resolve_project_path(root, args.output or declared_summary)
+    detail_path = resolve_project_path(root, args.detail_output or declared_detail)
+    if input_path != resolve_project_path(root, config["paths"]["report_inputs"]):
+        raise ConfigError("Declare custom report input paths in project.yaml so the report remains auditable.")
+    if summary_path != resolve_project_path(root, declared_summary):
+        raise ConfigError("Declare custom summary report paths in project.yaml so the report remains auditable.")
+    if detail_path != resolve_project_path(root, declared_detail):
+        raise ConfigError("Declare custom detail report paths in project.yaml so the report remains auditable.")
     if not config["deliverables"]["final_report"]:
         raise ConfigError("Final report generation is disabled in project.yaml.")
+    if args.format in {"both", "html"} and not detail_report_enabled(config):
+        raise ConfigError("Detailed report generation is disabled in project.yaml.")
+
     preflight = validate_project(root, stage="analyzed")
     print(format_report(preflight))
     if not preflight.passed:
@@ -239,17 +140,45 @@ def main() -> None:
         raise SystemExit(1)
     if args.with_insights and not config["deliverables"]["insights"]:
         raise ConfigError("Enable deliverables.insights before rendering requested insight text.")
+
     _, manifest = latest_run(root)
     data["project"]["run_id"] = manifest["run_id"]
-    report = render_report(data, with_insights=bool(args.with_insights))
-    if PLACEHOLDER_PATTERN.search(report):
-        raise ConfigError("Rendered report contains unresolved placeholders; complete the report inputs first.")
+    data["project"]["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(report, encoding="utf-8")
-    bind_report(root, config, output_path)
+    outputs: list[Path] = []
+    if args.format in {"both", "md"}:
+        summary = render_summary_markdown(
+            data,
+            project_root=root,
+            output_path=summary_path,
+            detail_path=detail_path,
+        )
+        if PLACEHOLDER_PATTERN.search(summary):
+            raise ConfigError("Rendered summary contains unresolved placeholders; complete the report inputs first.")
+        summary_path.parent.mkdir(parents=True, exist_ok=True)
+        summary_path.write_text(summary, encoding="utf-8")
+        outputs.append(summary_path)
+
+    if args.format in {"both", "html"}:
+        detail = render_detail_html(
+            data,
+            project_root=root,
+            output_path=detail_path,
+            summary_path=summary_path,
+            with_insights=bool(args.with_insights),
+        )
+        if PLACEHOLDER_PATTERN.search(detail):
+            raise ConfigError("Rendered detail report contains unresolved placeholders; complete the report inputs first.")
+        detail_path.parent.mkdir(parents=True, exist_ok=True)
+        detail_path.write_text(detail, encoding="utf-8")
+        outputs.append(detail_path)
+
+    bind_report(root, config, outputs)
     update_status(root, current_stage="reported", completed_stage="reported")
-    print(f"Generated final report: {output_path}")
+    for output in outputs:
+        print(f"Generated report: {output}")
+    if args.format != "both":
+        print("Note: formal delivery binds both the summary and the detailed report; run without --format for delivery.")
 
 
 if __name__ == "__main__":

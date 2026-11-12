@@ -207,11 +207,29 @@ def write_progress(root: Path, config: dict[str, Any]) -> Path:
     return path
 
 
+# Operational state lives in .harness/status.yaml, which is local-only. The
+# committed progress summary must stay verifiable from plan + change log alone.
+OPERATIONAL_LINE_PREFIXES = (
+    "- 最近运行：",
+    "- 最近记录的工程阶段：",
+    "- 剩余风险：",
+    "<!-- operational-status:",
+)
+
+
+def _plan_derived_view(markdown: str) -> str:
+    """Drop local-only status lines so a fresh clone is not reported as stale."""
+    lines = [line for line in markdown.splitlines() if not line.startswith(OPERATIONAL_LINE_PREFIXES)]
+    return "\n".join(lines).strip()
+
+
 def validate_progress(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     try:
         plan = load_plan(root, config)
         path = resolve_project_path(root, config["paths"].get("progress", PROGRESS_PATH))
-        fresh = path.is_file() and path.read_text(encoding="utf-8") == render_progress(root, config, plan)
+        fresh = path.is_file() and _plan_derived_view(path.read_text(encoding="utf-8")) == _plan_derived_view(
+            render_progress(root, config, plan)
+        )
         return [check("development_progress", "pass" if fresh else "fail", "Plan, requirements and progress summary agree." if fresh else "Progress summary is missing or stale; update the plan and run scripts/update_progress.py.", str(path.relative_to(root)))]
     except (OSError, ValueError, KeyError, TypeError) as exc:
         return [check("development_progress", "fail", str(exc))]

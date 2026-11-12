@@ -8,16 +8,25 @@ from typing import Any
 
 import pandas as pd
 
-from src.io import load_table
-from src.project_harness.config import resolve_project_path
-from src.project_harness.validation import CheckResult, check
+from ..io import load_table
+from ..project_harness.config import resolve_project_path
+from ..project_harness.validation import CheckResult, check
 
 
 def run_table_checks(project_root: str | Path, rules: list[dict[str, Any]], *, category: str | None = None) -> list[CheckResult]:
     root = Path(project_root).resolve()
     selected = [rule for rule in rules if category is None or rule["category"] == category]
     if not selected:
-        return [check("analysis_checks", "unverified", f"No {category or 'table'} checks are declared.", category="analysis")]
+        label = category or "table"
+        result_category = category or "analysis"
+        return [
+            check(
+                f"{label}_checks",
+                "unverified",
+                f"No {label} checks are declared.",
+                category=result_category,
+            )
+        ]
     cache: dict[str, pd.DataFrame] = {}
 
     def table(path: str) -> pd.DataFrame:
@@ -64,5 +73,13 @@ def run_table_checks(project_root: str | Path, rules: list[dict[str, Any]], *, c
         except (OSError, ValueError, KeyError, TypeError, ImportError) as exc:
             passed = False
             message = f"{rule['id']}: {exc}"
-        results.append(check("table_check", "pass" if passed else "fail", message, rule["table"], category="analysis"))
+        results.append(
+            check(
+                "table_check",
+                "pass" if passed else "fail",
+                message,
+                rule["table"],
+                category=rule.get("category") or category or "analysis",
+            )
+        )
     return results

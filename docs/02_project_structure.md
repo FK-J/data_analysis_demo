@@ -11,6 +11,8 @@ project/
   agent.md
   README.md
   project.yaml
+  conftest.py
+  pyproject.toml
   .env.example
   .harness/
     workflow.yaml
@@ -80,6 +82,7 @@ project/
 ## 2. 目录职责
 
 - `agent.md`：项目规范入口和文档目录。
+- `conftest.py` / `pyproject.toml`：测试引导与工具配置；`conftest.py` 负责让项目根可被 `import src`，因此 `pytest` 与 `python -m pytest` 等价。
 - `project.yaml`：项目类型、数据源、可选模块、交付物和运行路径的结构化契约。
 - `.harness/`：项目阶段定义和本地运行状态模板；`.harness/status.yaml` 为本地状态，不提交 Git。
 - `schemas/`：项目配置、报告输入和运行清单的机器校验规则。
@@ -90,8 +93,9 @@ project/
 - `docs/09_change_management_standard.md`：后续修改的唯一分级、重跑和完成规范。
 - `docs/change_execution_log.md`：每次修改的需求、影响范围、完成情况和风险记录。
 - `docs/analysis_framework_template.md`：业务分析框架模板。
-- `docs/final_report_structure_template.md`：最终报告结构模板。
-- `docs/final_analysis_report_template.md`：结果呈现型报告结构说明。
+- `docs/final_report_structure_template.md`：最终报告（结论摘要与分析详情）结构模板。
+- `docs/final_analysis_report_template.md`：结论摘要结构说明。
+- `docs/analysis_detail_report_template.md`：分析详情 HTML 结构、锚点和安全要求说明。
 - `docs/report_inputs_template.yaml`：报告生成脚本输入模板。
 - `docs/script_catalog.md`：可直接执行脚本的功能、输入、输出、命令示例和安全注意事项。
 - `README.md`：项目背景、运行方式、依赖说明和交付物说明。
@@ -107,7 +111,7 @@ project/
 - `src/`：可复用 Python 脚本。
 - `src/project_harness/`：项目初始化、Notebook 生成、配置校验、无界面执行、状态和审计内核。
 - `notebooks/main_analysis.ipynb`：唯一主分析 Notebook，必须完整执行全流程。
-- `scripts/generate_final_report.py`：固定生成最终报告的脚本，默认只呈现结果。
+- `scripts/generate_final_report.py`：同时生成结论摘要 Markdown 和分析详情 HTML 的脚本，默认只呈现结果。
 - `scripts/`：可直接执行的功能脚本目录。新增、删除、重命名或修改脚本时，必须同步更新 `docs/script_catalog.md`。
 - `scripts/init_project.py`：从模板初始化具体分析项目。
 - `scripts/generate_notebook.py`：根据 `project.yaml` 生成主 Notebook 骨架。
@@ -116,8 +120,8 @@ project/
 - `scripts/audit_project.py`：检查执行证据和交付产物。
 - `reports/figures/`：图表文件。
 - `reports/tables/`：结果表文件。
-- `reports/final/`：最终报告结构、报告输入素材、最终报告和交付材料。
-- `tests/`：关键函数、指标逻辑或数据校验测试。
+- `reports/final/`：报告结构、报告输入素材、结论摘要、分析详情和交付材料。
+- `tests/`：关键函数、指标逻辑或数据校验测试；框架自检测试只在模板仓库执行，业务项目应补充自己的测试。
 - `logs/`：运行日志。
 
 ## 3. Notebook 数量规范
@@ -186,6 +190,7 @@ fig_01_metric_trend.png
 fig_02_segment_comparison.png
 fig_03_model_performance.png
 final_analysis_report.md
+analysis_detail.html
 final_report_structure.md
 report_inputs.yaml
 ```
@@ -194,9 +199,10 @@ report_inputs.yaml
 
 - 结果表使用清晰业务名称。
 - 图表建议使用 `fig_序号_主题.png`。
-- 最终报告结构建议命名为 `final_report_structure.md`，统一保存到 `reports/final/`。
+- 报告结构建议命名为 `final_report_structure.md`，统一保存到 `reports/final/`。
 - 报告生成输入建议命名为 `report_inputs.yaml`，统一保存到 `reports/final/`。
-- 最终报告建议命名为 `final_analysis_report.md`，由 `scripts/generate_final_report.py` 生成并保存到 `reports/final/`。
+- 结论摘要建议命名为 `final_analysis_report.md`，由 `scripts/generate_final_report.py` 生成并保存到 `reports/final/`。
+- 分析详情建议命名为 `analysis_detail.html`，与结论摘要同一次生成并保存到 `reports/final/`。
 
 ## 5. README 要求
 
@@ -209,6 +215,7 @@ report_inputs.yaml
 - 变更管理规范和变更执行日志位置。
 - 框架问题记录文档位置。
 - 最终报告结构文件位置。
+- 结论摘要和分析详情文件位置。
 - 目录结构说明。
 - 环境依赖。
 - 数据来源说明。
@@ -225,7 +232,7 @@ report_inputs.yaml
 docs/analysis_framework.md
 ```
 
-具体项目的最终报告结构必须保存为：
+具体项目的结论摘要和分析详情结构必须保存为：
 
 ```text
 reports/final/final_report_structure.md
@@ -277,11 +284,12 @@ data/processed/
 logs/
 ```
 
-如果项目需要提交最终报告结构和最终报告，可以在 `.gitignore` 中保留：
+如果项目需要提交报告结构、结论摘要和分析详情，可以在 `.gitignore` 中保留：
 
 ```text
 !reports/final/final_report_structure.md
 !reports/final/final_analysis_report.md
+!reports/final/analysis_detail.html
 ```
 
 如果项目需要保留小型示例数据，必须确认数据已脱敏。

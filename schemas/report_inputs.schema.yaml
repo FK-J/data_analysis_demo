@@ -23,6 +23,9 @@ properties:
     type: object
     required: [section_goal, key_results, metrics, figures, tables]
     properties:
+      conclusions:
+        type: array
+        items: {type: string, minLength: 1}
       metrics:
         type: array
         items: {$ref: '#/$defs/metric'}
@@ -33,6 +36,12 @@ properties:
       type: object
       required: [id, title, section_goal, analysis_logic, key_results, figures, tables, notes]
       properties:
+        conclusions:
+          type: array
+          items: {type: string, minLength: 1}
+        process_steps:
+          type: array
+          items: {$ref: '#/$defs/step'}
         metrics:
           type: array
           items: {$ref: '#/$defs/metric'}
@@ -45,6 +54,12 @@ properties:
         tables:
           type: array
           items: {$ref: '#/$defs/asset'}
+  detail:
+    type: object
+    properties:
+      sections:
+        type: array
+        items: {$ref: '#/$defs/detail_section'}
   appendix:
     type: object
     required: [data_scope, metric_definitions, output_files]
@@ -79,3 +94,43 @@ $defs:
       title: {type: string, minLength: 1}
       path: {type: string, minLength: 1}
       note: {type: string}
+  step:
+    type: object
+    required: [title]
+    properties:
+      title: {type: string, minLength: 1}
+      method: {type: string}
+      evidence:
+        type: array
+        items: {type: string, minLength: 1}
+      finding: {type: string}
+      figures:
+        type: array
+        items: {$ref: '#/$defs/asset'}
+      tables:
+        type: array
+        items: {$ref: '#/$defs/asset'}
+  detail_section:
+    type: object
+    required: [id, title]
+    properties:
+      id: {type: string, minLength: 1}
+      title: {type: string, minLength: 1}
+      conclusions:
+        type: array
+        items: {type: string, minLength: 1}
+      content:
+        type: array
+        items: {type: string, minLength: 1}
+      steps:
+        type: array
+        items: {$ref: '#/$defs/step'}
+      figures:
+        type: array
+        items: {$ref: '#/$defs/asset'}
+      tables:
+        type: array
+        items: {$ref: '#/$defs/asset'}
+      notes:
+        type: array
+        items: {type: string, minLength: 1}

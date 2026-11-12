@@ -9,7 +9,7 @@
 它必须承担以下职责：
 
 - 读取并确认 `docs/analysis_framework.md`。
-- 读取并确认 `reports/final/final_report_structure.md`。
+- 读取并确认 `reports/final/final_report_structure.md`（结论摘要与分析详情两份产物的结构）。
 - 读取并确认 `docs/change_execution_log.md` 中当前变更的影响范围和重跑起点。
 - 说明本次分析基于的业务背景、决策目标、核心业务问题和分析边界。
 - 加载环境、配置和依赖。
@@ -18,8 +18,8 @@
 - 加载和校验数据。
 - 调用 Python 模块完成清洗、特征、分析、建模和可视化。
 - 展示关键中间结果。
-- 导出图表、表格和报告输入素材。
-- 支撑脚本生成结果呈现型最终报告。
+- 导出图表、表格和报告输入素材，包含逐问题结论和分析过程。
+- 支撑脚本生成结论摘要 Markdown 和分析详情 HTML。
 
 Notebook 不应承担大量底层函数定义。复杂逻辑必须下沉到 `src/` 目录中的 Python 脚本。
 
@@ -51,6 +51,7 @@ Notebook 不应承担大量底层函数定义。复杂逻辑必须下沉到 `src
 | 统计分析 | `modules.statistics: true` |
 | 机器学习建模 | `modules.modeling: true` |
 | 最终报告生成 | `deliverables.final_report: true` |
+| 分析详情生成 | `deliverables.detail_report: true`（默认开启） |
 
 不适用章节不进入生成结果，原因由 `project.yaml` 记录。修改配置后可运行 `python scripts/generate_notebook.py` 重新生成骨架，但正式分析阶段必须先确认覆盖影响。
 
@@ -178,7 +179,7 @@ notebooks/main_analysis.ipynb
 → 可选统计分析或机器学习建模
 → 结果验证与稳健性检查
 → 图表、表格和报告输入素材导出
-→ 最终报告脚本生成
+→ 结论摘要和分析详情生成
 → 项目完成检查
 ```
 
@@ -199,7 +200,7 @@ notebooks/main_analysis.ipynb
 - 没有报错。
 - 输出文件已生成。
 - 图表和结果表路径正确。
-- reports/final/report_inputs.yaml 已生成。
+- reports/final/report_inputs.yaml 已生成，包含核心结论、逐问题结论和分析过程。
 - docs/script_catalog.md 已覆盖可直接执行脚本，且脚本变更已同步更新该文档。
-- 最终报告由 scripts/generate_final_report.py 生成。
+- 结论摘要 reports/final/final_analysis_report.md 和分析详情 reports/final/analysis_detail.html 由 scripts/generate_final_report.py 同一次生成。
 - 当前变更日志中的受影响环节、检查项和剩余风险已更新。

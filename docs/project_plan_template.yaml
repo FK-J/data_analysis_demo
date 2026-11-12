@@ -71,16 +71,16 @@ tasks:
     blocker: ''
     next_action: 执行正式运行并复核运行清单
   - id: T07
-    title: 生成并审阅最终报告
+    title: 生成并审阅结论摘要与分析详情
     stage: reported
     owner: 项目负责人
     status: pending
     dependencies: [T06]
     outputs: []
-    acceptance: 报告覆盖、指标对账及运行绑定通过，表达已审阅
+    acceptance: 结论摘要只含规定内容，分析详情每节有结论，报告覆盖、指标对账及双产物运行绑定通过，表达已审阅
     evidence: ''
     blocker: ''
-    next_action: 启用报告时生成并审阅；不适用时取消任务并记录原因
+    next_action: 启用报告时同一次生成并审阅两份产物；不适用时取消任务并记录原因
   - id: T08
     title: 审计交付并关闭需求
     stage: audited

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +14,17 @@ except ImportError as exc:  # pragma: no cover
 
 PROJECT_CONFIG_NAME = "project.yaml"
 PROJECT_SCHEMA_PATH = Path("schemas/project.schema.yaml")
+DEFAULT_DETAIL_REPORT_PATH = "reports/final/analysis_detail.html"
+
+
+def detail_report_enabled(config: dict[str, Any]) -> bool:
+    """Return whether the detailed HTML report is part of the delivery."""
+    return bool(config.get("deliverables", {}).get("detail_report", True))
+
+
+def detail_report_path(config: dict[str, Any]) -> str:
+    """Return the configured detailed report path with a stable default."""
+    return str(config.get("paths", {}).get("detail_report") or DEFAULT_DETAIL_REPORT_PATH)
 
 
 class ConfigError(ValueError):
@@ -56,6 +68,12 @@ def write_yaml(path: str | Path, data: dict[str, Any]) -> None:
     )
 
 
+@lru_cache(maxsize=64)
+def _load_schema(resolved_path: str, modified_ns: int) -> dict[str, Any]:
+    """Cache schema documents; ``modified_ns`` invalidates edited schemas."""
+    return load_yaml(resolved_path)
+
+
 def validate_against_schema(
     data: dict[str, Any],
     schema_path: str | Path,
@@ -68,7 +86,14 @@ def validate_against_schema(
     except ImportError as exc:  # pragma: no cover
         raise ImportError("Missing dependency jsonschema. Install it with: pip install jsonschema") from exc
 
-    schema = load_yaml(schema_path)
+    resolved = Path(schema_path)
+    try:
+        stat_key = resolved.stat().st_mtime_ns
+    except OSError:
+        # Missing schema files keep the historical FileNotFoundError contract
+        # from load_yaml below.
+        stat_key = 0
+    schema = _load_schema(str(resolved), stat_key)
     errors = sorted(
         Draft202012Validator(schema).iter_errors(data),
         key=lambda error: [str(part) for part in error.absolute_path],

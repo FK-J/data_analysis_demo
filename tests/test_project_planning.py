@@ -5,12 +5,18 @@ from pathlib import Path
 import pytest
 
 from src.project_harness.config import ConfigError, load_project_config, load_yaml, write_yaml
-from src.project_harness.planning import change_ids, load_plan, register_change, request_fingerprint, validate_progress, write_progress
+from src.project_harness.planning import change_ids, load_plan, register_change, validate_progress, write_progress
 from src.project_harness.scaffold import initialize_project
 from src.project_harness.status import update_status
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+if load_project_config(ROOT)["project"]["mode"] != "template":
+    pytest.skip(
+        "Framework self-check tests only run in the framework template repository.",
+        allow_module_level=True,
+    )
 
 
 @pytest.fixture

@@ -33,6 +33,8 @@ def _copy_notebook_contract(target: Path) -> dict:
 
 
 def test_project_contract_is_valid() -> None:
+    if load_project_config(PROJECT_ROOT)["project"]["mode"] != "template":
+        pytest.skip("Framework self-check only.")
     config = validate_project_config(PROJECT_ROOT)
     assert config["project"]["mode"] == "template"
     assert config["runtime"]["notebook"] == "notebooks/main_analysis.ipynb"
@@ -63,6 +65,8 @@ def test_notebook_sections_follow_module_configuration(tmp_path: Path) -> None:
 
 
 def test_initialize_project_applies_presets(tmp_path: Path) -> None:
+    if load_project_config(PROJECT_ROOT)["project"]["mode"] != "template":
+        pytest.skip("Framework self-check only.")
     output = tmp_path / "generated_project"
     initialize_project(
         output,
@@ -115,6 +119,8 @@ def test_quality_summary_and_exports(tmp_path: Path) -> None:
 
 
 def test_template_scaffold_passes_validation_and_audit() -> None:
+    if load_project_config(PROJECT_ROOT)["project"]["mode"] != "template":
+        pytest.skip("Framework self-check only.")
     validation = validate_project(PROJECT_ROOT)
     audit = audit_project(PROJECT_ROOT)
 

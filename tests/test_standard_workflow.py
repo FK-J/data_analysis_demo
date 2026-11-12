@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 import sys
@@ -22,6 +21,12 @@ from src.quality import run_table_checks
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+if load_project_config(ROOT)["project"]["mode"] != "template":
+    pytest.skip(
+        "Framework self-check tests only run in the framework template repository.",
+        allow_module_level=True,
+    )
 
 
 @pytest.fixture
@@ -64,9 +69,29 @@ def install_analysis(root, *, fail=False):
             cell.source = "pass"
     inputs = {
         "project": {"name": "retention", "report_title": "客户留存分析", "analysis_framework_path": config["paths"]["analysis_framework"], "report_structure_path": config["paths"]["report_structure"], "notebook_path": config["runtime"]["notebook"]},
-        "summary": {"section_goal": "展示客户留存", "key_results": ["年度流失结果"], "metrics": [{"id": "loss_rate", "name": "流失率", "value": 1 / 3, "format": "percent", "source": {"path": "reports/tables/retention.csv", "column": "rate", "tolerance": 1e-12}, "note": "账号粒度"}], "figures": [], "tables": [{"title": "年度结果", "path": "reports/tables/retention.csv"}]},
-        "business_questions": [{"id": "Q1", "title": "年度留存", "section_goal": "展示年度结果", "analysis_logic": "汇总完整客户名单", "key_results": ["年度结果见表"], "figures": [], "tables": [], "notes": ["客户账号粒度"]}],
-        "appendix": {"data_scope": ["本轮客户"], "metric_definitions": ["流失账号除以全部账号"], "output_files": ["reports/tables/retention.csv"]},
+        "summary": {"section_goal": "展示客户留存", "conclusions": ["年度流失率为 33.33%"], "key_results": ["年度流失结果"], "metrics": [{"id": "loss_rate", "name": "流失率", "value": 1 / 3, "format": "percent", "source": {"path": "reports/tables/retention.csv", "column": "rate", "tolerance": 1e-12}, "note": "账号粒度"}], "figures": [], "tables": [{"title": "年度结果", "path": "reports/tables/retention.csv"}]},
+        "business_questions": [
+            {
+                "id": "Q1",
+                "title": "年度留存",
+                "section_goal": "展示年度结果",
+                "conclusions": ["年度流失 1 户，流失率 33.33%"],
+                "analysis_logic": "汇总完整客户名单",
+                "process_steps": [
+                    {"title": "核对客户名单", "method": "按客户账号去重", "evidence": ["reports/tables/retention.csv"], "finding": "名单完整且无重复"}
+                ],
+                "key_results": ["年度结果见表"],
+                "figures": [],
+                "tables": [{"title": "年度结果", "path": "reports/tables/retention.csv"}],
+                "notes": ["客户账号粒度"],
+            }
+        ],
+        "detail": {
+            "sections": [
+                {"id": "D1", "title": "数据质量", "conclusions": ["客户账号唯一"], "content": ["检查客户账号主键"], "tables": [{"title": "年度结果", "path": "reports/tables/retention.csv"}], "notes": ["仅覆盖本年度"]}
+            ]
+        },
+        "appendix": {"data_scope": ["本轮客户"], "metric_definitions": ["流失账号除以全部账号"], "output_files": ["reports/final/final_analysis_report.md", "reports/final/analysis_detail.html"]},
         "coverage": [{"id": "Q1", "status": "covered", "evidence": ["reports/tables/retention.csv"]}],
     }
     first = next(cell for cell in notebook.cells if cell.cell_type == "code")
@@ -99,6 +124,8 @@ def test_initialization_does_not_ship_business_files_or_private_state(tmp_path):
     assert not (root / "docs/business_history.md").exists()
     assert not (root / "data/raw/private.csv").exists()
     assert "CHANGE-20261013" not in (root / "docs/change_execution_log.md").read_text()
+    assert (root / "src/reporting/report.py").exists()
+    assert (root / "docs/analysis_detail_report_template.md").exists()
     assert not (root / "logs/runs").exists()
 
 
@@ -194,10 +221,19 @@ def test_complete_run_report_and_audit_without_changing_framework(project):
     assert core.read_bytes() == before
     assert validate_project(project, stage="audited").passed
     final_report = project / "reports/final/final_analysis_report.md"
+    detail_report = project / "reports/final/analysis_detail.html"
     original_report = final_report.read_text(encoding="utf-8")
+    original_detail = detail_report.read_text(encoding="utf-8")
+    assert "年度流失率为 33.33%" in original_report
+    assert "年度流失 1 户，流失率 33.33%" in original_detail
+    assert "分析逻辑" not in original_report
+    assert "<h3>本节结论</h3>" in original_detail
     final_report.write_text(original_report + "\n人工修改数字\n", encoding="utf-8")
     assert not audit_project(project).passed
     final_report.write_text(original_report, encoding="utf-8")
+    detail_report.write_text(original_detail + "\n人工修改过程\n", encoding="utf-8")
+    assert not audit_project(project).passed
+    detail_report.write_text(original_detail, encoding="utf-8")
     pd.DataFrame({"lost": [99], "total": [3]}).to_csv(project / "reports/tables/retention.csv", index=False)
     assert not audit_project(project).passed
 
