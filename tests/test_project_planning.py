@@ -37,7 +37,7 @@ def test_initialization_creates_independent_plan_and_fresh_summary(planned_proje
     assert plan["changes"] == []
     assert all(task["status"] == "pending" for task in plan["tasks"])
     assert validate_progress(root, config)[0].status == "pass"
-    summary = (root / config["paths"]["progress"]).read_text()
+    summary = (root / config["paths"]["progress"]).read_text(encoding="utf-8")
     assert "0 / 8" in summary
     assert "尚未登记需求" in summary
     assert "H01" not in summary
@@ -64,7 +64,7 @@ def test_plan_or_log_change_makes_summary_stale(planned_project):
     assert validate_progress(root, config)[0].status == "fail"
     write_progress(root, config)
     assert validate_progress(root, config)[0].status == "pass"
-    (root / "docs/change_execution_log.md").write_text("# 项目记录\n\n业务范围更新\n")
+    (root / "docs/change_execution_log.md").write_text("# 项目记录\n\n业务范围更新\n", encoding="utf-8")
     assert validate_progress(root, config)[0].status == "fail"
 
 
@@ -80,14 +80,14 @@ def test_requirement_revision_reopens_completed_task_and_downstream(planned_proj
     write_yaml(path, plan)
     write_progress(root, config)
     log_path = root / "docs/change_execution_log.md"
-    log_path.write_text(log_path.read_text().replace("年度分析", "月度分析"))
+    log_path.write_text(log_path.read_text(encoding="utf-8").replace("年度分析", "月度分析"), encoding="utf-8")
     register_change(root, config, "CHANGE-20261013-01", "改为月度分析", ["T01"])
     revised = load_plan(root, config)
     assert revised["tasks"][0]["status"] == "revalidate"
     assert revised["tasks"][1]["status"] == "revalidate"
     assert revised["tasks"][2]["status"] == "pending"
     write_progress(root, config)
-    summary = (root / config["paths"]["progress"]).read_text()
+    summary = (root / config["paths"]["progress"]).read_text(encoding="utf-8")
     assert "待重新验证" in summary
     assert "改为月度分析" in summary
     assert "已验收任务：0 / 8" in summary
@@ -123,7 +123,7 @@ def test_run_transition_refreshes_summary_without_completing_tasks(planned_proje
     update_status(root, current_stage="validated", last_run_id="test-run", last_run_status="passed", completed_stage="validated")
     assert validate_progress(root, config)[0].status == "pass"
     assert all(task["status"] == "pending" for task in load_plan(root, config)["tasks"])
-    summary = (root / config["paths"]["progress"]).read_text()
+    summary = (root / config["paths"]["progress"]).read_text(encoding="utf-8")
     assert "test-run" in summary
     assert "已验收任务：0 / 8" in summary
 
@@ -131,7 +131,7 @@ def test_run_transition_refreshes_summary_without_completing_tasks(planned_proje
 def test_example_change_records_are_not_actual_requirements(planned_project):
     root, _ = planned_project
     path = root / "docs/change_execution_log.md"
-    path.write_text("# 项目记录\n```markdown\n### CHANGE-20261013-01：示例\n```\n~~~markdown\n### CHANGE-20261013-02：示例\n~~~\n")
+    path.write_text("# 项目记录\n```markdown\n### CHANGE-20261013-01：示例\n```\n~~~markdown\n### CHANGE-20261013-02：示例\n~~~\n", encoding="utf-8")
     assert change_ids(root) == []
 
 
@@ -151,7 +151,7 @@ def test_existing_scope_change_cannot_be_hidden_by_regenerating_summary(planned_
     register_change(root, config, "CHANGE-20261013-01", "年度分析", ["T01"])
     write_progress(root, config)
     path = root / "docs/change_execution_log.md"
-    path.write_text(path.read_text().replace("年度分析", "月度分析"))
+    path.write_text(path.read_text(encoding="utf-8").replace("年度分析", "月度分析"), encoding="utf-8")
     with pytest.raises(ConfigError, match="scope changed"):
         write_progress(root, config)
     register_change(root, config, "CHANGE-20261013-01", "月度分析", ["T01"])

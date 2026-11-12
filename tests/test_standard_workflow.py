@@ -123,7 +123,7 @@ def test_initialization_does_not_ship_business_files_or_private_state(tmp_path):
     assert not (root / "scripts/school_only.py").exists()
     assert not (root / "docs/business_history.md").exists()
     assert not (root / "data/raw/private.csv").exists()
-    assert "CHANGE-20261013" not in (root / "docs/change_execution_log.md").read_text()
+    assert "CHANGE-20261013" not in (root / "docs/change_execution_log.md").read_text(encoding="utf-8")
     assert (root / "src/reporting/report.py").exists()
     assert (root / "docs/analysis_detail_report_template.md").exists()
     assert not (root / "logs/runs").exists()
@@ -205,6 +205,7 @@ def test_rule_rejects_path_escape(project):
         load_contracts(project, load_project_config(project))
 
 
+@pytest.mark.integration
 def test_complete_run_report_and_audit_without_changing_framework(project):
     core = project / "src/project_harness/audit.py"
     before = core.read_bytes()
@@ -238,6 +239,7 @@ def test_complete_run_report_and_audit_without_changing_framework(project):
     assert not audit_project(project).passed
 
 
+@pytest.mark.integration
 def test_failed_execution_retains_manifest_and_blocks_old_success(project):
     install_analysis(project, fail=True)
     result = execute_notebook(project)
@@ -271,6 +273,7 @@ def test_report_numeric_value_must_match_result_cell(project):
     assert check_report_metrics(project, config, load_contracts(project, config))[0].status == "pass"
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("relative", ["data/raw/customers.csv", "configs/project_contracts.yaml", "src/analysis/__init__.py", "notebooks/main_analysis.ipynb"])
 def test_changed_inputs_or_code_invalidate_run(project, relative):
     install_analysis(project)
@@ -281,6 +284,7 @@ def test_changed_inputs_or_code_invalidate_run(project, relative):
     assert any(item.status == "fail" for item in verify_run(project, load_project_config(project)))
 
 
+@pytest.mark.integration
 def test_no_report_project_can_run_and_audit_without_report_structure(project):
     config = load_project_config(project)
     config["deliverables"]["final_report"] = False

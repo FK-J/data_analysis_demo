@@ -6,7 +6,7 @@ import math
 from pathlib import Path
 from typing import Any
 
-from .config import ConfigError, load_yaml, resolve_project_path, validate_against_schema
+from .config import ConfigError, detail_report_enabled, load_yaml, resolve_project_path, validate_against_schema
 from .validation import PLACEHOLDER_PATTERN, CheckResult, check
 
 
@@ -103,6 +103,36 @@ def check_report_coverage(root: Path, config: dict[str, Any], contracts: dict[st
             category="report",
         ))
     return results
+
+
+def check_detail_sections(
+    root: Path,
+    config: dict[str, Any],
+    data: dict[str, Any] | None = None,
+) -> list[CheckResult]:
+    """Require at least one cross-question detail section when the detail report is enabled."""
+    if not config["deliverables"]["final_report"] or not detail_report_enabled(config):
+        return [check("report_detail_sections", "pass", "Detailed report is not requested.", category="report")]
+    if data is None:
+        path = resolve_project_path(root, config["paths"]["report_inputs"])
+        if not path.is_file():
+            return [check("report_detail_sections", "unverified", "Report inputs are missing.", category="report")]
+        try:
+            data = load_yaml(path)
+        except (ConfigError, OSError, UnicodeError) as exc:
+            return [check("report_detail_sections", "fail", str(exc), category="report")]
+    detail = data.get("detail")
+    sections = detail.get("sections") if isinstance(detail, dict) else None
+    if not isinstance(sections, list) or not sections:
+        return [
+            check(
+                "report_detail_sections",
+                "fail",
+                "Detailed report requires at least one detail.sections entry (data quality, cleaning, EDA or robustness).",
+                category="report",
+            )
+        ]
+    return [check("report_detail_sections", "pass", "Detailed report declares process sections.", category="report")]
 
 
 def check_report_metrics(root: Path, config: dict[str, Any], contracts: dict[str, Any]) -> list[CheckResult]:

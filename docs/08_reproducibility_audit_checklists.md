@@ -1,6 +1,6 @@
 # 08. 复现、审计与检查清单
 
-审计分别输出 engineering、analysis、report 结果。fail 与 unverified 都阻断正式交付。正式运行记录输入/代码/契约与产物指纹，报告只能绑定内容一致的最新正式运行；旧的运行成功不能证明已经修改的结果或报告有效。
+审计分别输出 engineering、data、analysis、report 结果。fail 与 unverified 都阻断正式交付。正式运行记录输入/代码/契约与产物指纹，报告只能绑定内容一致的最新正式运行；旧的运行成功不能证明已经修改的结果或报告有效。
 
 ## 1. 复现规范
 
@@ -130,7 +130,7 @@ python scripts/validate_project.py
 python scripts/audit_project.py
 ```
 
-前者检查配置 Schema、必需文件、Notebook 章节与生成指纹、占位内容、SQL 只读策略和敏感文件；后者进一步检查图表、结果表、报告输入、结论摘要、分析详情、相对链接及最近一次无界面执行证据。
+前者检查项目/分析配置与契约 Schema、必需文件、Notebook 章节与生成指纹、占位内容、SQL 只读策略和敏感文件；后者进一步检查图表、结果表、报告输入、结论摘要、分析详情、相对链接及最近一次无界面执行证据。
 
 框架自身和项目自定义测试统一用 Pytest：
 
@@ -138,7 +138,7 @@ python scripts/audit_project.py
 python -m pytest -q
 ```
 
-项目根 `conftest.py` 会把项目根加入 `sys.path`，因此直接运行 `pytest` 也可以。框架自检测试只在模板仓库（`project.yaml` 中 `mode: template`）执行，业务项目副本中会自动跳过。
+默认只跑非集成测试；依赖 Jupyter 内核的测试标记为 `integration`，用 `python -m pytest -q -m integration` 单独运行。在受限沙箱或没有内核权限的环境中只跑非集成回归。项目根 `conftest.py` 会把项目根加入 `sys.path`，因此直接运行 `pytest` 也可以。框架自检测试只在模板仓库（`project.yaml` 中 `mode: template`）执行，业务项目副本中会自动跳过。
 
 ## 6. 项目完成检查清单
 
@@ -146,9 +146,10 @@ python -m pytest -q
 
 - [ ] 已与用户确认业务分析框架。
 - [ ] `docs/analysis_framework.md` 已创建并保存。
-- [ ] 已与用户确认结论摘要和分析详情的呈现结构。
-- [ ] `reports/final/final_report_structure.md` 已创建并保存。
+- [ ] 启用最终报告时，已与用户确认结论摘要和分析详情的呈现结构。
+- [ ] 启用最终报告时，`reports/final/final_report_structure.md` 已创建并保存。
 - [ ] `docs/framework_issue_log.md` 已保留或创建。
+- [ ] `docs/script_catalog.md`、`docs/project_plan.yaml` 和 `docs/progress_summary.md` 已保留。
 - [ ] 当前修改已记录到 `docs/change_execution_log.md`。
 - [ ] 等级、验收标准、影响范围、重跑起点和必达产物已确认。
 - [ ] 核心业务问题、业务拆解框架、分析路径和分析边界已说明。
@@ -179,12 +180,12 @@ python -m pytest -q
 - [ ] 每个主要 Notebook 步骤都有 Markdown 备注。
 - [ ] 关键图表已导出到 `reports/figures/`。
 - [ ] 关键结果表已导出到 `reports/tables/`。
-- [ ] `reports/final/report_inputs.yaml` 已生成，包含核心结论、逐问题结论和分析过程素材。
-- [ ] 已运行 `scripts/generate_final_report.py`。
-- [ ] 结论摘要已保存到 `reports/final/final_analysis_report.md`，且只包含元数据与运行 ID、核心结论、关键指标、关键图表和交付物索引。
-- [ ] 分析详情已保存到 `reports/final/analysis_detail.html`，包含完整过程、证据和每节结论。
-- [ ] 结论摘要的交付物索引能跳转到分析详情对应章节。
-- [ ] 两份产物绑定同一个运行 ID，且没有被手工修改。
+- [ ] 启用最终报告时，`reports/final/report_inputs.yaml` 已生成，包含核心结论、逐问题结论和分析过程素材。
+- [ ] 启用最终报告时，已运行 `scripts/generate_final_report.py`。
+- [ ] 启用最终报告时，结论摘要已保存到 `reports/final/final_analysis_report.md`，且只包含元数据与运行 ID、核心结论、关键指标、关键图表和交付物索引。
+- [ ] 启用分析详情时，分析详情已保存到 `reports/final/analysis_detail.html`，包含完整过程、证据和每节结论，且 `detail.sections` 至少有一个过程章节。
+- [ ] 启用分析详情时，结论摘要的交付物索引能跳转到分析详情对应章节。
+- [ ] 启用分析详情时，两份产物绑定同一个运行 ID，且没有被手工修改。
 - [ ] 报告结果能追溯到 `docs/analysis_framework.md` 中的业务问题。
 - [ ] 默认未生成大模型洞察，除非用户明确要求。
 - [ ] 业务分析结果有数据支撑。
@@ -206,7 +207,7 @@ python -m pytest -q
 - 有已确认的 `docs/analysis_framework.md`。
 - 有 `docs/framework_issue_log.md`，且已记录框架、模板、工具或流程缺陷，或明确无新增问题。
 - 有当前修改的变更执行记录，且所有必做项已完成。
-- 有已确认的 `reports/final/final_report_structure.md`。
+- 启用最终报告时，有已确认的 `reports/final/final_report_structure.md`。
 - Notebook 可以顺序执行。
 - Notebook 每个主要步骤有备注。
 - 数据来源和指标口径已说明。
@@ -215,8 +216,8 @@ python -m pytest -q
 - 复杂 Python 逻辑保存在 `src/`，并由 Notebook 调用。
 - 可直接执行脚本已记录在 `docs/script_catalog.md`，且脚本变更已同步更新该文档。
 - 关键图表和结果表已导出到 `reports/`。
-- `reports/final/report_inputs.yaml` 已生成。
-- 结论摘要和分析详情由 `scripts/generate_final_report.py` 同一次生成并绑定运行 ID。
+- 启用最终报告时，`reports/final/report_inputs.yaml` 已生成，且 `detail.sections` 至少有一个过程章节（启用分析详情时）。
+- 启用分析详情时，结论摘要和分析详情由 `scripts/generate_final_report.py` 同一次生成并绑定运行 ID。
 - 不包含真实数据库密码、密钥或敏感明细数据。
 
 ## 8. 禁止事项汇总
@@ -265,7 +266,7 @@ python -m pytest -q
 9. 检查 docs/script_catalog.md 是否与 scripts/ 目录一致
 10. 检查图表、结果表和 report_inputs.yaml 是否更新
 11. 运行 scripts/generate_final_report.py
-12. 检查结论摘要是否只含规定内容、分析详情每节是否有结论、两份产物链接和运行 ID 是否有效
+12. 启用最终报告时，检查结论摘要是否只含规定内容、分析详情每节是否有结论、两份产物链接和运行 ID 是否有效
 13. 检查占位内容、洞察开关和敏感信息
 14. 运行 scripts/audit_project.py 并确认没有失败项
 15. 将变更执行记录更新为已完成或说明阻塞项

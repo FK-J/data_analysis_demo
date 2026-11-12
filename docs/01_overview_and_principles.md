@@ -47,7 +47,7 @@ docs/analysis_framework.md
 
 如果用户提出新的分析需求，必须先判断是否影响 `docs/analysis_framework.md`。如果影响，必须先更新该文档，再同步修改 Notebook、SQL、Python 和报告。
 
-在进入具体分析前，还应基于业务分析框架确认结论摘要和分析详情的呈现结构，并保存到：
+启用最终报告时，在进入具体分析前，还应基于业务分析框架确认结论摘要和分析详情的呈现结构，并保存到：
 
 ```text
 reports/final/final_report_structure.md
@@ -65,7 +65,7 @@ reports/final/final_report_structure.md
 - Notebook 不依赖未记录的手动操作。
 - 所有核心数据处理逻辑可以追溯到 SQL 文件、Python 脚本或 Notebook cell。
 - 所有最终图表、结果表和报告文件均落地保存到 `reports/` 目录。
-- 最终报告由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 同时生成结论摘要 Markdown 和分析详情 HTML。
+- 启用最终报告时，最终报告由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 同时生成结论摘要 Markdown 和分析详情 HTML。
 
 ### 4.3 口径明确
 

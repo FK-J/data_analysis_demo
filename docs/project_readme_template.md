@@ -188,7 +188,7 @@ reports/final/final_analysis_report.md
 reports/final/analysis_detail.html
 ```
 
-两份产物应基于 `reports/final/final_report_structure.md` 和 `reports/final/report_inputs.yaml` 同一次生成，并绑定同一个运行 ID。
+启用最终报告时，两份产物应基于 `reports/final/final_report_structure.md` 和 `reports/final/report_inputs.yaml` 同一次生成，并绑定同一个运行 ID。
 
 ## 12. 结果摘要
 

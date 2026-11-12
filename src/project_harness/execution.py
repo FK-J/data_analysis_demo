@@ -78,12 +78,14 @@ def execute_notebook(
     notebook_path = resolve_project_path(root, config["runtime"]["notebook"])
     run_id = _run_id()
     run_dir = root / "logs" / "runs" / run_id
-    run_dir.mkdir(parents=True, exist_ok=False)
     executed_path = (
         resolve_project_path(root, output_path)
         if output_path is not None
         else run_dir / "executed_main_analysis.ipynb"
     )
+    if executed_path == notebook_path:
+        raise ValueError("Executed Notebook output must not overwrite the source Notebook.")
+    run_dir.mkdir(parents=True, exist_ok=False)
     executed_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path = run_dir / "manifest.json"
 

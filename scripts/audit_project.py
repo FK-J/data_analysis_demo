@@ -32,7 +32,11 @@ def main() -> None:
     output = Path(args.json_output)
     if not output.is_absolute():
         output = project_root / output
-    write_report(output, report)
+    try:
+        write_report(output, report)
+    except OSError as exc:
+        print(f"Cannot write audit report: {exc}")
+        raise SystemExit(1) from exc
     print(f"Audit report: {output}")
     config = validate_project_config(project_root)
     if report.passed and config["project"]["mode"] == "project":

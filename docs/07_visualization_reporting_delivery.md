@@ -70,14 +70,14 @@ reports/tables/
 
 ## 5. 报告结构与交付规范
 
-最终交付必须包含脚本生成的两份结果呈现型报告，而不是只交付图表、结果表或 Notebook 输出：
+启用最终报告时，最终交付必须包含脚本生成的两份结果呈现型报告，而不是只交付图表、结果表或 Notebook 输出：
 
 | 产物 | 路径 | 内容 |
 | --- | --- | --- |
 | 结论摘要 | `reports/final/final_analysis_report.md` | 元数据与运行 ID、核心结论、关键指标、关键图表、交付物索引 |
 | 分析详情 | `reports/final/analysis_detail.html` | 分析框架、数据范围与质量、清洗、EDA、逐问题分析过程与证据、全量图表和结果表、口径限制、每节结论、复现信息 |
 
-正式分析前必须先确认两份产物的结构：
+启用最终报告时，正式分析前必须先确认两份产物的结构：
 
 ```text
 reports/final/final_report_structure.md
@@ -116,6 +116,8 @@ docs/final_analysis_report_template.md
 - 跨问题过程章节：数据质量、清洗、EDA、稳健性、方法假设等，每个章节同样必须有**本节结论**。
 - 附录与复现信息：数据范围、指标口径、输出文件、报告要求覆盖、运行 ID 和复现路径。
 
+启用分析详情时，`report_inputs.yaml` 的 `detail.sections` 至少包含一项跨问题过程章节（例如数据质量、清洗、EDA 或稳健性）；审计器会阻止零过程章节的详情报告。`summary.tables` 用于在分析详情概览中列出关键结果表链接，不在结论摘要中展开。若设置 `deliverables.detail_report: false`，默认的 `--format both` 只生成已启用的结论摘要，审计也只校验该产物；显式请求 `--format html` 会失败。
+
 分析详情成品结构、锚点和安全要求见：
 
 ```text
@@ -124,7 +126,7 @@ docs/analysis_detail_report_template.md
 
 ### 5.3 生成、绑定与链接
 
-两份产物必须由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 在同一次执行中生成，并绑定同一个运行 ID。
+启用分析详情时，两份产物必须由 `scripts/generate_final_report.py` 基于 `reports/final/report_inputs.yaml` 在同一次执行中生成，并绑定同一个运行 ID。
 
 结论摘要中的交付物索引必须链接到分析详情的稳定锚点；分析详情页头必须提供返回结论摘要的链接。
 

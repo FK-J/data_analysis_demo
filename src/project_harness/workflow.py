@@ -12,7 +12,7 @@ from .config import (
     load_yaml,
     resolve_project_path,
 )
-from .contracts import check_report_coverage, check_report_metrics, is_complete, load_contracts
+from .contracts import check_detail_sections, check_report_coverage, check_report_metrics, is_complete, load_contracts
 from .validation import CheckResult, check
 
 
@@ -89,6 +89,7 @@ def evaluate_stage(root: Path, config: dict[str, Any], stage: str) -> list[Check
                 results.extend(run_table_checks(root, contracts["checks"], category="data" if gate == "data_checks" else "analysis"))
             elif gate == "report_coverage":
                 results.extend(check_report_coverage(root, config, contracts))
+                results.extend(check_detail_sections(root, config))
             elif gate == "report_metrics":
                 results.extend(check_report_metrics(root, config, contracts))
             elif gate == "run_evidence":
@@ -106,9 +107,20 @@ def evaluate_stage(root: Path, config: dict[str, Any], stage: str) -> list[Check
                     for kind in ("figures", "tables"):
                         if not config["deliverables"][kind]:
                             continue
-                        paths = list((root / "reports" / kind).glob("*"))
-                        captured = [path for path in paths if path.is_file() and path.relative_to(root).as_posix() in recorded]
-                        results.append(check("delivery_artifacts", "pass" if captured else "fail", f"{kind}: {len(captured)} files captured by this run.", category="report"))
+                        paths = [
+                            path
+                            for path in (root / "reports" / kind).glob("*")
+                            if path.is_file() and path.name != ".gitkeep" and not path.name.startswith(".")
+                        ]
+                        captured = [path for path in paths if path.relative_to(root).as_posix() in recorded]
+                        uncaptured = [path for path in paths if path.relative_to(root).as_posix() not in recorded]
+                        valid = bool(captured) and not uncaptured
+                        message = (
+                            f"{kind}: {len(captured)} files captured by this run."
+                            if valid
+                            else f"{kind}: {len(uncaptured)} delivered files were not captured by this run."
+                        )
+                        results.append(check("delivery_artifacts", "pass" if valid else "fail", message, category="report"))
                 except (OSError, ValueError, KeyError, TypeError) as exc:
                     results.append(check("delivery_artifacts", "fail", str(exc), category="report"))
             else:

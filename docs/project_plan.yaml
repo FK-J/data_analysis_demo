@@ -32,6 +32,11 @@ changes:
   task_ids:
   - H05
   request_fingerprint: 8a4a9c2f96d7a98f8f95b7a959dfea3314a022451ac13679911c1a5f2008258c
+- id: CHANGE-20261112-01
+  summary: 修复审阅发现的门禁与跨平台问题
+  task_ids:
+  - H06
+  request_fingerprint: 5907aed65b1c086f32ec5bafdffffbc3e0898170c767a4e0a54ad30e7c03e133
 tasks:
 - id: H01
   title: 完善后续修改工作流
@@ -137,5 +142,29 @@ tasks:
   - pyproject.toml
   acceptance: 阶段语义、检查分类、校验器健壮性、进度摘要机制、SQL 与资产遍历去重、测试与 CI 全部完成并回归通过
   evidence: 68 项回归通过；模板校验 39 项、审计 39 项通过、0 失败；新增 SQL 策略、检查分类、Notebook 陈旧检测、克隆状态与模板模式阶段回归测试
+  blocker: ''
+  next_action: ''
+- id: H06
+  title: 修复审阅发现的门禁与跨平台问题
+  stage: audited
+  owner: 框架维护者
+  status: completed
+  dependencies: []
+  outputs:
+  - src/project_harness/validation.py
+  - src/project_harness/audit.py
+  - src/project_harness/execution.py
+  - src/project_harness/config.py
+  - src/db/connection.py
+  - src/quality/contracts.py
+  - src/reporting/report.py
+  - scripts/generate_final_report.py
+  - schemas/analysis_config.schema.yaml
+  - tests/test_db.py
+  - tests/test_review_fixes.py
+  - pyproject.toml
+  - .github/workflows/ci.yml
+  acceptance: 必需文件漏检、非 ASCII 链接误判、Windows 编码、校验器崩溃和报告契约不一致均已修复并有回归测试
+  evidence: 非集成回归 77 项通过；模板校验 48 项、审计 48 项通过、0 失败、1 项模板模式预期说明；新增必需路径、非 ASCII 链接、分析配置 Schema、空表、SQLite 只读和报告契约回归测试。集成测试 7 项因当前沙箱 Jupyter ACL 拒绝未能执行，已列为剩余风险。
   blocker: ''
   next_action: ''

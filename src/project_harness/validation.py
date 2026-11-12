@@ -91,6 +91,7 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
         ".harness/workflow.yaml",
         ".harness/template_files.yaml",
         ".harness/status.template.yaml",
+        "schemas/analysis_config.schema.yaml",
         "schemas/project.schema.yaml",
         "schemas/report_inputs.schema.yaml",
         "schemas/run_manifest.schema.yaml",
@@ -98,7 +99,12 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
         "schemas/contracts.schema.yaml",
         "schemas/plan.schema.yaml",
         "docs/project_plan_template.yaml",
+        "docs/change_execution_log.md",
+        "docs/09_change_management_standard.md",
+        "docs/framework_issue_log.md",
+        "docs/script_catalog.md",
         "scripts/update_progress.py",
+        "scripts/generate_final_report.py",
         "templates/notebook_sections.yaml",
         config["runtime"]["notebook"],
         "scripts/init_project.py",
@@ -107,6 +113,12 @@ def _required_paths(config: dict[str, Any]) -> list[str]:
         "scripts/run_notebook.py",
         "scripts/audit_project.py",
     ]
+    plan_path = config.get("paths", {}).get("plan", "docs/project_plan.yaml")
+    progress_path = config.get("paths", {}).get("progress", "docs/progress_summary.md")
+    common.extend([plan_path, progress_path])
+    contracts_path = config.get("paths", {}).get("contracts")
+    if contracts_path:
+        common.append(contracts_path)
     if config["project"]["mode"] == "project":
         common.append(config["paths"]["analysis_framework"])
         if config["deliverables"]["final_report"]:
@@ -127,11 +139,12 @@ def _check_required_paths(root: Path, config: dict[str, Any]) -> list[CheckResul
     results: list[CheckResult] = []
     for relative_path in _required_paths(config):
         path = resolve_project_path(root, relative_path)
+        is_file = path.is_file()
         results.append(
             check(
                 "required_path",
-                "pass" if path.exists() else "fail",
-                "Required project path exists." if path.exists() else "Required project path is missing.",
+                "pass" if is_file else "fail",
+                "Required project file exists." if is_file else "Required project file is missing or is not a file.",
                 relative_path,
             )
         )
@@ -141,7 +154,7 @@ def _check_required_paths(root: Path, config: dict[str, Any]) -> list[CheckResul
 def _check_notebook(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     relative_notebook = config["runtime"]["notebook"]
     notebook_path = resolve_project_path(root, relative_notebook)
-    if not notebook_path.exists():
+    if not notebook_path.is_file():
         return [check("notebook_structure", "fail", "Main Notebook is missing.", relative_notebook)]
 
     try:
@@ -168,7 +181,9 @@ def _check_notebook(root: Path, config: dict[str, Any]) -> list[CheckResult]:
             )
         ]
 
-    harness = notebook.metadata.get("harness") or {}
+    harness = notebook.metadata.get("harness")
+    if not isinstance(harness, dict):
+        harness = {}
     actual_sections = list(harness.get("sections", []))
     results = [
         check(
@@ -251,7 +266,29 @@ def _check_placeholders(root: Path, config: dict[str, Any]) -> list[CheckResult]
     results: list[CheckResult] = []
     for relative_path in paths:
         path = resolve_project_path(root, relative_path)
-        has_placeholder = path.exists() and bool(PLACEHOLDER_PATTERN.search(path.read_text(encoding="utf-8")))
+        if not path.is_file():
+            results.append(
+                check(
+                    "project_placeholders",
+                    "fail",
+                    "Required document is not a readable file.",
+                    relative_path,
+                )
+            )
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            results.append(
+                check(
+                    "project_placeholders",
+                    "fail",
+                    f"Required document cannot be read as UTF-8: {exc}",
+                    relative_path,
+                )
+            )
+            continue
+        has_placeholder = bool(PLACEHOLDER_PATTERN.search(text))
         results.append(
             check(
                 "project_placeholders",
@@ -265,9 +302,12 @@ def _check_placeholders(root: Path, config: dict[str, Any]) -> list[CheckResult]
 
 def _check_sql_policy(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     analysis_config_path = resolve_project_path(root, config["runtime"]["analysis_config"])
-    if not analysis_config_path.exists():
+    if not analysis_config_path.is_file():
         return [check("readonly_sql", "fail", "Analysis configuration is missing.", config["runtime"]["analysis_config"])]
-    analysis_config = load_yaml(analysis_config_path)
+    try:
+        analysis_config = load_yaml(analysis_config_path)
+    except (ConfigError, OSError, UnicodeError) as exc:
+        return [check("readonly_sql", "fail", f"Analysis configuration cannot be read: {exc}", config["runtime"]["analysis_config"])]
     readonly = bool(analysis_config.get("analysis", {}).get("readonly_sql", True))
     if not readonly:
         return [check("readonly_sql", "warn", "Read-only SQL policy is disabled in analysis_config.yaml.")]
@@ -292,7 +332,7 @@ def _check_sql_policy(root: Path, config: dict[str, Any]) -> list[CheckResult]:
 def _tracked_sensitive_files(root: Path) -> list[str] | None:
     try:
         completed = subprocess.run(
-            ["git", "ls-files", "--", ".env", "configs/database.yaml"],
+            ["git", "ls-files", "--", ".env", "configs/database.yaml", "data"],
             cwd=root,
             check=True,
             capture_output=True,
@@ -301,10 +341,10 @@ def _tracked_sensitive_files(root: Path) -> list[str] | None:
         )
     except (OSError, subprocess.CalledProcessError):
         return None
-    return [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+    return [line.strip() for line in completed.stdout.splitlines() if line.strip() and not line.strip().endswith(".gitkeep")]
 
 
-def _check_sensitive_files(root: Path) -> list[CheckResult]:
+def _check_sensitive_files(root: Path, config: dict[str, Any]) -> list[CheckResult]:
     tracked = _tracked_sensitive_files(root)
     if tracked is None:
         return [
@@ -314,15 +354,28 @@ def _check_sensitive_files(root: Path) -> list[CheckResult]:
                 "Git tracking information is unavailable; inspect private files before committing.",
             )
         ]
-    return [
+    sensitive_files = [path for path in tracked if not path.startswith("data/")]
+    data_files = [path for path in tracked if path.startswith("data/")]
+    results = [
         check(
             "sensitive_files",
-            "fail" if tracked else "pass",
-            f"Sensitive files are tracked by Git: {', '.join(tracked)}"
-            if tracked
+            "fail" if sensitive_files else "pass",
+            f"Sensitive files are tracked by Git: {', '.join(sensitive_files)}"
+            if sensitive_files
             else "No known private configuration files are tracked by Git.",
         )
     ]
+    if config["data"]["sensitive"]:
+        results.append(
+            check(
+                "sensitive_data_storage",
+                "fail" if data_files else "pass",
+                f"Sensitive data must not be committed to Git: {', '.join(data_files)}"
+                if data_files
+                else "Sensitive data is declared; no tracked data files were found.",
+            )
+        )
+    return results
 
 
 def _check_report_inputs(root: Path, config: dict[str, Any]) -> list[CheckResult]:
@@ -330,7 +383,7 @@ def _check_report_inputs(root: Path, config: dict[str, Any]) -> list[CheckResult
         return [check("report_inputs_schema", "pass", "Final report inputs are not requested.")]
     relative_path = config["paths"]["report_inputs"]
     path = resolve_project_path(root, relative_path)
-    if not path.exists():
+    if not path.is_file():
         status = "pass" if config["project"]["mode"] == "template" else "warn"
         return [check("report_inputs_schema", status, "Report inputs have not been generated yet.", relative_path)]
 
@@ -341,7 +394,7 @@ def _check_report_inputs(root: Path, config: dict[str, Any]) -> list[CheckResult
             root / "schemas/report_inputs.schema.yaml",
             label=relative_path,
         )
-    except (ConfigError, FileNotFoundError) as exc:
+    except (ConfigError, FileNotFoundError, OSError, UnicodeError) as exc:
         return [check("report_inputs_schema", "fail", str(exc), relative_path)]
 
     insights_enabled = bool(data.get("insights", {}).get("enabled", False))
@@ -385,21 +438,7 @@ def validate_project(project_root: str | Path, *, stage: str | None = None) -> V
     results.append(check("project_config", "pass", "project.yaml satisfies its schema.", "project.yaml"))
     results.extend(_check_required_paths(root, config))
     analysis_config_path = resolve_project_path(root, config["runtime"]["analysis_config"])
-    if analysis_config_path.exists():
-        analysis_config = load_yaml(analysis_config_path)
-        analysis_name = analysis_config.get("project", {}).get("name")
-        names_match = analysis_name == config["project"]["name"]
-        results.append(
-            check(
-                "project_name_consistency",
-                "pass" if names_match else "fail",
-                "Project name matches analysis_config.yaml."
-                if names_match
-                else f"Project name differs: project.yaml={config['project']['name']!r}, analysis_config.yaml={analysis_name!r}.",
-                config["runtime"]["analysis_config"],
-            )
-        )
-    else:
+    if not analysis_config_path.is_file():
         results.append(
             check(
                 "project_name_consistency",
@@ -408,10 +447,35 @@ def validate_project(project_root: str | Path, *, stage: str | None = None) -> V
                 config["runtime"]["analysis_config"],
             )
         )
+    else:
+        try:
+            analysis_config = load_yaml(analysis_config_path)
+        except (ConfigError, OSError, UnicodeError) as exc:
+            results.append(
+                check(
+                    "project_name_consistency",
+                    "fail",
+                    f"Analysis configuration cannot be read: {exc}",
+                    config["runtime"]["analysis_config"],
+                )
+            )
+        else:
+            analysis_name = analysis_config.get("project", {}).get("name")
+            names_match = analysis_name == config["project"]["name"]
+            results.append(
+                check(
+                    "project_name_consistency",
+                    "pass" if names_match else "fail",
+                    "Project name matches analysis_config.yaml."
+                    if names_match
+                    else f"Project name differs: project.yaml={config['project']['name']!r}, analysis_config.yaml={analysis_name!r}.",
+                    config["runtime"]["analysis_config"],
+                )
+            )
     results.extend(_check_notebook(root, config))
     results.extend(_check_placeholders(root, config))
     results.extend(_check_sql_policy(root, config))
-    results.extend(_check_sensitive_files(root))
+    results.extend(_check_sensitive_files(root, config))
     results.extend(_check_report_inputs(root, config))
     results.extend(_check_status_template(root))
     from .contracts import validate_contracts

@@ -14,6 +14,7 @@ except ImportError as exc:  # pragma: no cover
 
 PROJECT_CONFIG_NAME = "project.yaml"
 PROJECT_SCHEMA_PATH = Path("schemas/project.schema.yaml")
+ANALYSIS_CONFIG_SCHEMA_PATH = Path("schemas/analysis_config.schema.yaml")
 DEFAULT_DETAIL_REPORT_PATH = "reports/final/analysis_detail.html"
 
 
@@ -25,6 +26,21 @@ def detail_report_enabled(config: dict[str, Any]) -> bool:
 def detail_report_path(config: dict[str, Any]) -> str:
     """Return the configured detailed report path with a stable default."""
     return str(config.get("paths", {}).get("detail_report") or DEFAULT_DETAIL_REPORT_PATH)
+
+
+def resolve_report_formats(requested: str, config: dict[str, Any]) -> str:
+    """Resolve ``both``/``md``/``html`` against the delivered report switches.
+
+    ``both`` means every enabled deliverable. When the detail report is disabled,
+    ``both`` degrades to the summary only; explicitly requesting ``html`` still fails.
+    """
+    if requested not in {"both", "md", "html"}:
+        raise ConfigError(f"Unsupported report format: {requested}")
+    if requested == "html" and not detail_report_enabled(config):
+        raise ConfigError("Detailed report generation is disabled in project.yaml.")
+    if requested == "both" and not detail_report_enabled(config):
+        return "md"
+    return requested
 
 
 class ConfigError(ValueError):
@@ -46,13 +62,15 @@ def resolve_project_path(project_root: str | Path, path: str | Path) -> Path:
 def load_yaml(path: str | Path) -> dict[str, Any]:
     """Load a YAML mapping from disk."""
     yaml_path = Path(path)
-    if not yaml_path.exists():
-        raise FileNotFoundError(f"YAML file not found: {yaml_path}")
+    if not yaml_path.is_file():
+        raise FileNotFoundError(f"YAML file not found or is not a file: {yaml_path}")
     with yaml_path.open("r", encoding="utf-8") as file:
         try:
             data = yaml.safe_load(file) or {}
         except yaml.YAMLError as exc:
             raise ConfigError(f"Invalid YAML: {yaml_path}: {exc}") from exc
+        except (OSError, UnicodeError) as exc:
+            raise ConfigError(f"Cannot read YAML: {yaml_path}: {exc}") from exc
     if not isinstance(data, dict):
         raise ConfigError(f"YAML root must be a mapping: {yaml_path}")
     return data
@@ -138,6 +156,14 @@ def validate_project_config(
             resolve_project_path(root, relative_path)
     for relative_path in project_config["paths"].values():
         resolve_project_path(root, relative_path)
+
+    analysis_config_path = resolve_project_path(root, project_config["runtime"]["analysis_config"])
+    if analysis_config_path.is_file():
+        validate_against_schema(
+            load_yaml(analysis_config_path),
+            root / ANALYSIS_CONFIG_SCHEMA_PATH,
+            label="analysis_config.yaml",
+        )
     return project_config
 
 

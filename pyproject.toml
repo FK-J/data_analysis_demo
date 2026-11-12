@@ -2,6 +2,10 @@
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: requires a working Jupyter kernel and may be unavailable in restricted sandboxes",
+]
 
 [tool.ruff]
 line-length = 120

@@ -70,7 +70,7 @@ python scripts/init_project.py --output ../new_analysis_project --name new_analy
 3. 创建 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`。
 4. 根据数据源、统计分析、建模和交付物开关组合主 Notebook 章节。
 
-生成后先参考 `docs/project_readme_template.md` 完善 README，在 `docs/change_execution_log.md` 创建项目初始化记录，并保留 `docs/framework_issue_log.md`。如调整 `scripts/` 下的可执行脚本，必须同步更新 `docs/script_catalog.md`。
+生成后 README 已按 `docs/project_readme_template.md` 生成，填写其中的“待填写”项；在 `docs/change_execution_log.md` 创建项目初始化记录，并保留 `docs/framework_issue_log.md`。如调整 `scripts/` 下的可执行脚本，必须同步更新 `docs/script_catalog.md`。
 
 随后与用户讨论业务背景、决策目标、核心业务问题、业务拆解框架和分析边界，再完成两份确认文档。生成器不会替代这一步人工确认。
 
@@ -262,6 +262,8 @@ reports/final/analysis_detail.html
 ```bash
 python scripts/generate_final_report.py --with-insights
 ```
+
+运行前必须把 `project.yaml` 的 `deliverables.insights` 设为 `true`，否则脚本会在确认报告契约后拒绝渲染。
 
 ## 9. 提交前检查
 

@@ -17,11 +17,15 @@ project/
   .harness/
     workflow.yaml
     status.template.yaml
+    template_files.yaml
   schemas/
+    analysis_config.schema.yaml
     project.schema.yaml
     report_inputs.schema.yaml
     run_manifest.schema.yaml
     status.schema.yaml
+    contracts.schema.yaml
+    plan.schema.yaml
   templates/
     notebook_sections.yaml
   docs/
@@ -29,14 +33,19 @@ project/
     framework_issue_log.md
     09_change_management_standard.md
     change_execution_log.md
+    project_plan.yaml
+    project_plan_template.yaml
+    progress_summary.md
     analysis_framework_template.md
     final_report_structure_template.md
     final_analysis_report_template.md
+    analysis_detail_report_template.md
     report_inputs_template.yaml
     script_catalog.md
   configs/
     database.example.yaml
     analysis_config.yaml
+    project_contracts.yaml
   data/
     raw/
     interim/
@@ -69,6 +78,7 @@ project/
     run_notebook.py
     audit_project.py
     generate_final_report.py
+    update_progress.py
   reports/
     figures/
     tables/
@@ -77,7 +87,7 @@ project/
   logs/
 ```
 
-小项目可以精简目录，但不得改变核心逻辑：原始数据、SQL、Python 脚本、主 Notebook、结果输出必须有清晰边界。
+小项目可以精简不使用的业务目录，但必须保留 `scripts/validate_project.py` 要求的框架文件；原始数据、SQL、Python 脚本、主 Notebook、结果输出必须有清晰边界。
 
 ## 2. 目录职责
 
@@ -118,6 +128,10 @@ project/
 - `scripts/validate_project.py`：执行结构、配置、Notebook、SQL 和安全门禁。
 - `scripts/run_notebook.py`：在干净内核中执行主 Notebook 并保存运行清单。
 - `scripts/audit_project.py`：检查执行证据和交付产物。
+- `scripts/update_progress.py`：核对需求、计划与摘要，生成 `docs/progress_summary.md`。
+- `docs/project_plan.yaml`：任务状态、依赖、产物、验收依据和 Change ID 映射的唯一事实来源。
+- `docs/progress_summary.md`：由 `scripts/update_progress.py` 生成的进度视图，不手工编辑。
+- `schemas/analysis_config.schema.yaml`：分析运行配置的类型和必需字段约束。
 - `reports/figures/`：图表文件。
 - `reports/tables/`：结果表文件。
 - `reports/final/`：报告结构、报告输入素材、结论摘要、分析详情和交付材料。
@@ -232,7 +246,7 @@ report_inputs.yaml
 docs/analysis_framework.md
 ```
 
-具体项目的结论摘要和分析详情结构必须保存为：
+启用最终报告时，具体项目的结论摘要和分析详情结构必须保存为：
 
 ```text
 reports/final/final_report_structure.md
@@ -303,20 +317,49 @@ project/
   agent.md
   README.md
   project.yaml
+  conftest.py
+  pyproject.toml
   .harness/
+    workflow.yaml
+    status.template.yaml
+    template_files.yaml
   schemas/
+    analysis_config.schema.yaml
+    project.schema.yaml
+    report_inputs.schema.yaml
+    run_manifest.schema.yaml
+    status.schema.yaml
+    contracts.schema.yaml
+    plan.schema.yaml
   templates/
+    notebook_sections.yaml
   docs/
     analysis_framework.md
     framework_issue_log.md
     09_change_management_standard.md
     change_execution_log.md
+    project_plan.yaml
+    project_plan_template.yaml
+    progress_summary.md
+    script_catalog.md
+  configs/
+    analysis_config.yaml
+    project_contracts.yaml
   data/
   sql/
   src/
   notebooks/
     main_analysis.ipynb
+  scripts/
+    init_project.py
+    generate_notebook.py
+    validate_project.py
+    run_notebook.py
+    audit_project.py
+    generate_final_report.py
+    update_progress.py
+  tests/
   reports/
 ```
 
-任何不使用的目录，可以在 README 或 Notebook 中说明“不适用”。
+`python scripts/validate_project.py` 的必需文件检查以上述清单为准；确实不适用的目录可以在 README 或 Notebook 中说明“不适用”，但不能删除校验器和生成脚本依赖的文件。

@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 from .config import (
     ConfigError,
@@ -22,7 +23,11 @@ from .validation import PLACEHOLDER_PATTERN, ValidationReport, check, validate_p
 def _non_placeholder_files(directory: Path) -> list[Path]:
     if not directory.exists():
         return []
-    return [path for path in directory.iterdir() if path.is_file() and path.name != ".gitkeep"]
+    return [
+        path
+        for path in directory.iterdir()
+        if path.is_file() and path.name != ".gitkeep" and not path.name.startswith(".")
+    ]
 
 
 def _has_text(values: Any) -> bool:
@@ -62,7 +67,8 @@ def _report_links(root: Path, path: Path) -> list[str]:
         reference = reference.strip()
         if not reference or reference.startswith(("http://", "https://", "#", "mailto:", "data:", "javascript:")):
             continue
-        target = reference.split("#", 1)[0]
+        # Report renderers percent-encode paths; resolve the decoded local path.
+        target = unquote(reference.split("#", 1)[0])
         if not target:
             continue
         resolved = (path.parent / target).resolve()
@@ -114,7 +120,7 @@ def audit_project(project_root: str | Path) -> ValidationReport:
             )
 
     report_inputs_path = resolve_project_path(root, config["paths"]["report_inputs"])
-    if report_inputs_path.exists():
+    if config["deliverables"]["final_report"] and report_inputs_path.is_file():
         report_inputs = load_yaml(report_inputs_path)
         serialized = json.dumps(report_inputs, ensure_ascii=False)
         results.append(
@@ -139,6 +145,8 @@ def audit_project(project_root: str | Path) -> ValidationReport:
                 category="report",
             )
         )
+        from .contracts import check_detail_sections
+        results.extend(check_detail_sections(root, config, report_inputs))
         for relative_path in dict.fromkeys(asset_paths(report_inputs)):
             try:
                 asset_path = resolve_project_path(root, relative_path)
@@ -155,9 +163,9 @@ def audit_project(project_root: str | Path) -> ValidationReport:
             results.append(
                 check(
                     "report_asset_reference",
-                    "pass" if asset_path.exists() else "fail",
+                    "pass" if asset_path.is_file() else "fail",
                     "Referenced report asset exists."
-                    if asset_path.exists()
+                    if asset_path.is_file()
                     else "Referenced report asset is missing.",
                     relative_path,
                 )
@@ -169,8 +177,13 @@ def audit_project(project_root: str | Path) -> ValidationReport:
             artifacts.append((detail_report_path(config), "detail_report"))
         for relative, code in artifacts:
             report_path = resolve_project_path(root, relative)
-            exists = report_path.exists()
-            has_placeholders = exists and bool(PLACEHOLDER_PATTERN.search(report_path.read_text(encoding="utf-8")))
+            exists = report_path.is_file()
+            has_placeholders = False
+            if exists:
+                try:
+                    has_placeholders = bool(PLACEHOLDER_PATTERN.search(report_path.read_text(encoding="utf-8")))
+                except (OSError, UnicodeError):
+                    has_placeholders = True
             valid = exists and not has_placeholders
             results.append(
                 check(

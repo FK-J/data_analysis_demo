@@ -48,6 +48,7 @@ files:
 - reports/tables/.gitkeep
 - requirements.txt
 - schemas/contracts.schema.yaml
+- schemas/analysis_config.schema.yaml
 - schemas/project.schema.yaml
 - schemas/report_inputs.schema.yaml
 - schemas/run_manifest.schema.yaml
@@ -103,6 +104,10 @@ files:
 - src/visualization/__init__.py
 - templates/notebook_sections.yaml
 - tests/.gitkeep
+- tests/test_db.py
 - tests/test_generate_final_report.py
+- tests/test_harness_quality.py
 - tests/test_project_harness.py
+- tests/test_review_fixes.py
+- tests/test_sql_policy.py
 - tests/test_standard_workflow.py

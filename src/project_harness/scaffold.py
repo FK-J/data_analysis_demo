@@ -114,12 +114,9 @@ def initialize_project(
         "# 框架使用问题与迭代记录\n\n仅记录本项目发现的通用框架缺陷，业务问题记录在项目契约或质量结果中。\n\n"
         "| Issue ID | 问题与证据 | 根因/处理建议 | Change ID | 状态 |\n| --- | --- | --- | --- | --- |\n", encoding="utf-8",
     )
-    (target / "README.md").write_text(
-        f"# {display_name}\n\n本项目由标准数据分析流程框架初始化。\n\n"
-        "先阅读 `docs/framework_usage.md`，填写 `docs/analysis_framework.md`、报告结构和 `configs/project_contracts.yaml`。\n"
-        "业务逻辑放在项目 `src/`，由 `notebooks/main_analysis.ipynb` 调用；框架工具位于 `src/project_harness/`。\n",
-        encoding="utf-8",
-    )
+    readme_template = (target / "docs/project_readme_template.md").read_text(encoding="utf-8")
+    readme = readme_template.replace("# 项目名称", f"# {display_name}", 1)
+    (target / "README.md").write_text(readme, encoding="utf-8")
 
     plan_path = resolve_project_path(target, config["paths"].get("plan", "docs/project_plan.yaml"))
     plan_path.parent.mkdir(parents=True, exist_ok=True)

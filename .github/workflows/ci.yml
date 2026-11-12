@@ -6,7 +6,11 @@ on:
 
 jobs:
   quality-gates:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,6 +24,8 @@ jobs:
         run: ruff check .
       - name: Tests
         run: python -m pytest -q
+      - name: Integration tests
+        run: python -m pytest -q -m integration
       - name: Validate framework template
         run: python scripts/validate_project.py
       - name: Audit framework template

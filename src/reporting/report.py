@@ -9,6 +9,7 @@ summary repeating the full analysis.
 
 from __future__ import annotations
 
+import hashlib
 import html
 import os
 import re
@@ -61,8 +62,14 @@ def _generated_at(project: dict[str, Any]) -> str:
 
 
 def _slug(value: Any) -> str:
-    slug = re.sub(r"[^0-9A-Za-z_-]+", "-", _text(value)).strip("-").lower()
-    return slug or "section"
+    raw = _text(value)
+    slug = re.sub(r"[^0-9A-Za-z_-]+", "-", raw).strip("-").lower()
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:8]
+    if not slug:
+        return f"section-{digest}"
+    if any(ord(char) > 127 for char in raw):
+        return f"{slug}-{digest}"
+    return slug
 
 
 def _relative_link(
@@ -534,8 +541,15 @@ def render_detail_html(
         _html_metric_table(summary.get("metrics")),
         "<h3>关键图表</h3>",
         _html_figures(summary.get("figures"), project_root=root, output_dir=output_dir),
-        "</section>",
     ]
+    if summary.get("tables"):
+        overview.extend(
+            [
+                "<h3>关键结果表</h3>",
+                _html_tables(summary.get("tables"), project_root=root, output_dir=output_dir),
+            ]
+        )
+    overview.append("</section>")
 
     appendix_parts = ["<section id=\"appendix\">", "<h2>4. 附录与复现信息</h2>"]
     appendix_parts.extend(

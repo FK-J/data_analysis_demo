@@ -29,15 +29,15 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.project_harness.config import (
     ConfigError,
-    detail_report_enabled,
     detail_report_path,
     resolve_project_path,
+    resolve_report_formats,
     validate_against_schema,
     validate_project_config,
 )
 from src.project_harness.status import update_status
 from src.project_harness.provenance import bind_report, latest_run, verify_run
-from src.project_harness.contracts import check_report_coverage, check_report_metrics, load_contracts
+from src.project_harness.contracts import check_detail_sections, check_report_coverage, check_report_metrics, load_contracts
 from src.project_harness.validation import PLACEHOLDER_PATTERN, ValidationReport, format_report, validate_project
 from src.reporting.report import render_detail_html, render_summary_markdown
 
@@ -69,6 +69,20 @@ def load_report_inputs(input_path: Path, *, project_root: Path = PROJECT_ROOT) -
     )
 
     return data
+
+
+def _generated_at(config: dict[str, Any]) -> str:
+    """Return a local timestamp in the project timezone when available."""
+    zone = None
+    timezone_name = config.get("project", {}).get("timezone")
+    if timezone_name:
+        try:
+            from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+            zone = ZoneInfo(str(timezone_name))
+        except (ImportError, ZoneInfoNotFoundError, ValueError):
+            zone = None
+    return datetime.now(zone).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def parse_args() -> argparse.Namespace:
@@ -120,8 +134,7 @@ def main() -> None:
         raise ConfigError("Declare custom detail report paths in project.yaml so the report remains auditable.")
     if not config["deliverables"]["final_report"]:
         raise ConfigError("Final report generation is disabled in project.yaml.")
-    if args.format in {"both", "html"} and not detail_report_enabled(config):
-        raise ConfigError("Detailed report generation is disabled in project.yaml.")
+    formats = resolve_report_formats(args.format, config)
 
     preflight = validate_project(root, stage="analyzed")
     print(format_report(preflight))
@@ -134,7 +147,11 @@ def main() -> None:
 
     data = load_report_inputs(input_path, project_root=root)
     contracts = load_contracts(root, config)
-    coverage = ValidationReport(check_report_coverage(root, config, contracts) + check_report_metrics(root, config, contracts))
+    coverage = ValidationReport(
+        check_report_coverage(root, config, contracts)
+        + check_report_metrics(root, config, contracts)
+        + check_detail_sections(root, config, data)
+    )
     if not coverage.passed:
         print(format_report(coverage))
         raise SystemExit(1)
@@ -143,10 +160,10 @@ def main() -> None:
 
     _, manifest = latest_run(root)
     data["project"]["run_id"] = manifest["run_id"]
-    data["project"]["generated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data["project"]["generated_at"] = _generated_at(config)
 
     outputs: list[Path] = []
-    if args.format in {"both", "md"}:
+    if formats in {"both", "md"}:
         summary = render_summary_markdown(
             data,
             project_root=root,
@@ -159,7 +176,7 @@ def main() -> None:
         summary_path.write_text(summary, encoding="utf-8")
         outputs.append(summary_path)
 
-    if args.format in {"both", "html"}:
+    if formats in {"both", "html"}:
         detail = render_detail_html(
             data,
             project_root=root,
@@ -177,8 +194,8 @@ def main() -> None:
     update_status(root, current_stage="reported", completed_stage="reported")
     for output in outputs:
         print(f"Generated report: {output}")
-    if args.format != "both":
-        print("Note: formal delivery binds both the summary and the detailed report; run without --format for delivery.")
+    if formats != "both":
+        print("Note: only the enabled report artifacts were generated; formal delivery requires both when detail_report is enabled.")
 
 
 if __name__ == "__main__":

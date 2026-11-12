@@ -31,13 +31,13 @@
 - 可以通过 Python 直接连接数据库，但禁止硬编码真实账号、密码、密钥或生产库敏感配置。
 - Notebook 每个主要步骤必须写清楚目的、上游依赖、输入文件/对象、输出文件/对象、是否可缓存和调试提示。
 - 所有关键结果或结论必须可以追溯到数据、SQL、Python 脚本或 Notebook cell。
-- 最终报告在正式 Notebook 运行结束后，通过 `scripts/generate_final_report.py` 同时生成结论摘要 `reports/final/final_analysis_report.md` 和分析详情 `reports/final/analysis_detail.html`，并绑定同一运行 ID；不在正在执行的 Notebook 内调用正式报告 CLI。结论摘要只放元数据、核心结论、关键指标、关键图表和交付物索引；完整分析过程、证据和每节结论放在分析详情。默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
+- 启用最终报告时，在正式 Notebook 运行结束后通过 `scripts/generate_final_report.py` 同时生成结论摘要 `reports/final/final_analysis_report.md` 和分析详情 `reports/final/analysis_detail.html`，并绑定同一运行 ID；不在正在执行的 Notebook 内调用正式报告 CLI。结论摘要只放元数据、核心结论、关键指标、关键图表和交付物索引；完整分析过程、证据和每节结论放在分析详情。默认只呈现结果；除非用户明确要求，不生成洞察或业务解读。
 - 交付前必须依次通过 `scripts/validate_project.py`、`scripts/run_notebook.py` 和 `scripts/audit_project.py`。
 - 自动化脚本只用于生成与验收，不得绕过主 Notebook 形成第二套分析流程。
 
 核心目标：
 
-> 每个项目必须先形成 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`，再通过 `notebooks/main_analysis.ipynb` 从上到下完整复现，并最终由 `scripts/generate_final_report.py` 生成结论摘要（Markdown）和分析详情（HTML）两份结果呈现型报告。
+> 每个项目必须先形成 `docs/analysis_framework.md`，启用最终报告时还要形成 `reports/final/final_report_structure.md`，再通过 `notebooks/main_analysis.ipynb` 从上到下完整复现；启用最终报告时，最终由 `scripts/generate_final_report.py` 生成结论摘要（Markdown）和分析详情（HTML）两份结果呈现型报告。
 
 后续修改必须按 `docs/09_change_management_standard.md` 完成登记、影响判断、重跑、校验和产物同步。
 
@@ -109,7 +109,7 @@ agent.md
 - 有清晰的业务问题和分析目标。
 - 有当前修改对应的 `docs/change_execution_log.md` 记录。
 - 有已确认的 `docs/analysis_framework.md`。
-- 有已确认的 `reports/final/final_report_structure.md`。
+- 启用最终报告时，有已确认的 `reports/final/final_report_structure.md`。
 - 有 `notebooks/main_analysis.ipynb`。
 - `project.yaml` 已通过 Schema 校验，Notebook 章节与配置一致。
 - 主 Notebook 可以从上到下顺序执行。

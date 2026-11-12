@@ -9,7 +9,7 @@
 它必须承担以下职责：
 
 - 读取并确认 `docs/analysis_framework.md`。
-- 读取并确认 `reports/final/final_report_structure.md`（结论摘要与分析详情两份产物的结构）。
+- 启用最终报告时，读取并确认 `reports/final/final_report_structure.md`（结论摘要与分析详情两份产物的结构）。
 - 读取并确认 `docs/change_execution_log.md` 中当前变更的影响范围和重跑起点。
 - 说明本次分析基于的业务背景、决策目标、核心业务问题和分析边界。
 - 加载环境、配置和依赖。
@@ -51,9 +51,8 @@ Notebook 不应承担大量底层函数定义。复杂逻辑必须下沉到 `src
 | 统计分析 | `modules.statistics: true` |
 | 机器学习建模 | `modules.modeling: true` |
 | 最终报告生成 | `deliverables.final_report: true` |
-| 分析详情生成 | `deliverables.detail_report: true`（默认开启） |
 
-不适用章节不进入生成结果，原因由 `project.yaml` 记录。修改配置后可运行 `python scripts/generate_notebook.py` 重新生成骨架，但正式分析阶段必须先确认覆盖影响。
+不适用章节不进入生成结果；原因记录在 README 或 `docs/project_plan.yaml` 的任务说明中，不向 `project.yaml` 增加自由字段。修改配置后可运行 `python scripts/generate_notebook.py` 重新生成骨架，但正式分析阶段必须先确认覆盖影响。
 
 ## 3. Notebook 备注规范
 

@@ -105,11 +105,11 @@ python scripts/run_notebook.py
 
 **是否会写文件：** 会写入执行副本和运行清单。
 
-**安全与注意事项：** 无界面执行不替代分析师的交互分析；失败时仍保留运行清单用于定位。
+**安全与注意事项：** 无界面执行不替代分析师的交互分析；失败时仍保留运行清单用于定位。`--output` 可指定项目内执行副本路径，但不得指向源 Notebook，否则脚本会拒绝执行以避免覆盖分析入口。
 
 ### 3.5 `scripts/audit_project.py`
 
-**功能：** 分工程、分析、报告类别审计阶段出口、最近一次正式运行及其内容指纹、报告覆盖和交付物。不把缺少分析检查视为通过。
+**功能：** 分工程、数据、分析、报告类别审计阶段出口、最近一次正式运行及其内容指纹、报告覆盖和交付物。不把缺少分析检查视为通过。
 
 **默认输入：** 项目契约、运行清单及 `reports/` 下的交付文件。
 
@@ -125,7 +125,7 @@ python scripts/audit_project.py
 
 **是否会写文件：** 会写入审计报告；具体项目通过审计后还会更新本地 Harness 状态。
 
-**安全与注意事项：** 必须在成功完成无界面 Notebook 运行后执行。
+**安全与注意事项：** 必须在成功完成无界面 Notebook 运行后执行。`--json-output` 可指定审计 JSON 路径；无法写入时命令会明确失败，而不会把审计结果静默丢弃。
 
 ### 3.6 `scripts/generate_final_report.py`
 
@@ -166,7 +166,7 @@ python scripts/generate_final_report.py --format md
 python scripts/generate_final_report.py --format html
 ```
 
-`--format md` 或 `--format html` 只用于开发迭代；正式交付必须运行默认的 `both`，否则审计会因缺少另一份产物或绑定失败而阻止交付。
+`--format md` 或 `--format html` 只用于开发迭代；正式交付必须运行默认的 `both`，否则审计会因缺少另一份产物或绑定失败而阻止交付。例外：当 `deliverables.detail_report: false` 时，`both` 只生成已启用的结论摘要，审计也只校验该产物；显式 `--format html` 会失败。启用分析详情时，`report_inputs.yaml` 的 `detail.sections` 至少包含一项过程章节。
 
 如用户明确要求渲染已准备好的洞察内容：
 
@@ -185,12 +185,12 @@ python scripts/generate_final_report.py --with-insights
 - 正式生成必须在无界面 Notebook 运行之后；不要在正在执行的 Notebook 内调用此 CLI。
 - 默认只呈现结果、图表、表格、口径和输出文件路径。
 - 默认不调用大模型，不自动生成洞察、归因或业务建议。
-- 只有显式传入 `--with-insights` 时，才会在分析详情中渲染 `report_inputs.yaml` 中已经写好的洞察文本。
+- 只有显式传入 `--with-insights` 且 `project.yaml` 的 `deliverables.insights: true` 时，才会在分析详情中渲染 `report_inputs.yaml` 中已经写好的洞察文本。
 - 运行前应检查 `report_inputs.yaml` 是否仍有“待填写”占位内容，以及是否包含不应进入报告的敏感明细信息。
 - 分析详情会引用 `reports/figures/` 和 `reports/tables/` 下的文件；交付前应确认这些文件存在且已脱敏。
 - 两份产物生成后不应手工修改，否则报告绑定校验会失败。
 
-## 4. 新增脚本登记模板
+## 4. 项目计划与进度脚本
 
 ### `scripts/update_progress.py`
 
@@ -205,6 +205,8 @@ python scripts/generate_final_report.py --with-insights
 **是否必须由 Notebook 调用：** 否，属于开发协作与进度管理工具，不执行分析。
 
 **写文件和注意事项：** 默认只覆盖生成的摘要；登记需求参数会同步修改计划的需求映射、范围指纹和需重新验证的任务状态。不修改变更记录。计划与变更记录不一致时返回非零。任务完成需人工填写验收依据，摘要本身不证明分析正确。
+
+## 5. 新增脚本登记模板
 
 新增脚本时，复制以下模板到“脚本详情”并填写。
 

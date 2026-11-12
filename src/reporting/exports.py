@@ -23,8 +23,10 @@ def export_dataframe(
     suffix = destination.suffix.lower()
     if suffix == ".csv":
         dataframe.to_csv(destination, index=index)
-    elif suffix in {".xlsx", ".xls"}:
+    elif suffix == ".xlsx":
         dataframe.to_excel(destination, index=index)
+    elif suffix == ".xls":
+        raise ValueError("Writing .xls is not supported; export .xlsx or .csv instead.")
     elif suffix == ".parquet":
         dataframe.to_parquet(destination, index=index)
     else:

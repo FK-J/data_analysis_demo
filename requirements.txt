@@ -15,4 +15,7 @@ scipy
 statsmodels
 scikit-learn
 openpyxl
+pyarrow
+xlrd
+tzdata
 pytest

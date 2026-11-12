@@ -18,7 +18,7 @@ except ImportError as exc:  # pragma: no cover
     raise ImportError("Missing dependency PyYAML. Install it with: pip install PyYAML") from exc
 
 try:
-    from sqlalchemy import create_engine, text
+    from sqlalchemy import create_engine, event, text
     from sqlalchemy.engine import Engine, URL
 except ImportError as exc:  # pragma: no cover
     raise ImportError("Missing dependency SQLAlchemy. Install it with: pip install SQLAlchemy PyMySQL") from exc
@@ -169,6 +169,21 @@ def _build_sqlite_url(config: dict[str, Any]) -> URL:
     return URL.create(drivername="sqlite", database=database)
 
 
+def _apply_readonly(engine: Engine, dialect: str) -> None:
+    """Make every new connection read-only for supported dialects."""
+
+    @event.listens_for(engine, "connect")
+    def _set_readonly(dbapi_connection: Any, _connection_record: Any) -> None:
+        cursor = dbapi_connection.cursor()
+        try:
+            if dialect == "sqlite":
+                cursor.execute("PRAGMA query_only = ON")
+            elif dialect == "mysql":
+                cursor.execute("SET SESSION TRANSACTION READ ONLY")
+        finally:
+            cursor.close()
+
+
 def _create_engine_from_config(config: dict[str, Any]) -> Engine:
     """Build an engine from an already loaded and expanded profile."""
     dialect = str(config.get("dialect", "mysql")).lower()
@@ -181,7 +196,7 @@ def _create_engine_from_config(config: dict[str, Any]) -> Engine:
             "read_timeout": int(config.get("read_timeout", 60)),
             "write_timeout": int(config.get("write_timeout", 60)),
         }
-        return create_engine(
+        engine = create_engine(
             _build_mysql_url(config),
             echo=echo,
             pool_pre_ping=bool(config.get("pool_pre_ping", True)),
@@ -189,21 +204,23 @@ def _create_engine_from_config(config: dict[str, Any]) -> Engine:
             connect_args=connect_args,
             future=True,
         )
-
-    if dialect == "sqlite":
+    elif dialect == "sqlite":
         _validate_sqlite_config(config)
         connect_args = {"check_same_thread": bool(config.get("check_same_thread", False))}
-        return create_engine(
+        engine = create_engine(
             _build_sqlite_url(config),
             echo=echo,
             connect_args=connect_args,
             future=True,
         )
-
-    raise ValueError(
-        f"Unsupported database dialect={dialect!r}. "
-        "Supported dialects: mysql, sqlite."
-    )
+    else:
+        raise ValueError(
+            f"Unsupported database dialect={dialect!r}. "
+            "Supported dialects: mysql, sqlite."
+        )
+    if bool(config.get("readonly", False)):
+        _apply_readonly(engine, dialect)
+    return engine
 
 
 def create_engine_from_profile(

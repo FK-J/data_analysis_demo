@@ -17,10 +17,10 @@
 - `docs/09_change_management_standard.md` 是后续修改的唯一变更管理规范。
 - `docs/change_execution_log.md` 记录每次后续修改的执行范围和完成情况。
 - `docs/analysis_framework.md` 是具体项目的业务分析框架，正式分析前必须与用户确认。
-- `reports/final/final_report_structure.md` 是具体项目的最终报告结构，正式分析前必须确认。
+- 启用最终报告时，`reports/final/final_report_structure.md` 是具体项目的最终报告结构，正式分析前必须确认。
 - `docs/framework_issue_log.md` 只记录框架、模板、工具或流程缺陷及改进建议。
 - `docs/script_catalog.md` 记录可直接执行脚本的功能、输入、输出和使用规范。
-- `scripts/generate_final_report.py` 同时生成结论摘要 `final_analysis_report.md` 和分析详情 `analysis_detail.html`；摘要只放结论与索引，详情承载完整过程，默认只呈现结果。
+- 启用最终报告时，`scripts/generate_final_report.py` 同时生成结论摘要 `final_analysis_report.md` 和分析详情 `analysis_detail.html`；摘要只放结论与索引，详情承载完整过程，默认只呈现结果。
 - `reports/` 保存图表、结果表、报告输入素材和最终交付物。
 - `configs/` 管理项目参数和数据源配置。
 - `sql/` 保存可复用 SQL。
@@ -41,12 +41,12 @@ python scripts/init_project.py --output ../customer_retention_analysis --name cu
 
 1. 阅读 `agent.md` 和 `docs/` 下的项目规范。
 2. 与用户确认业务背景、决策目标、核心业务问题、业务拆解和分析边界。
-3. 完成 `docs/analysis_framework.md` 和 `reports/final/final_report_structure.md`，清理所有占位内容。
+3. 完成 `docs/analysis_framework.md`；启用最终报告时，再完成 `reports/final/final_report_structure.md` 并清理所有占位内容。
 4. 按需配置私有数据库连接和 `configs/analysis_config.yaml`。
 5. 在主 Notebook 中交互完成数据加载、质量检查、分析、验证和结果展示。
 6. 将复杂 SQL 放入 `sql/`，将稳定、可复用的 Python 逻辑放入 `src/`，再由 Notebook 调用。
 7. 将关键结果导出到 `reports/`，并生成包含结论、过程步骤和证据的 `reports/final/report_inputs.yaml`。
-8. 运行报告生成器，得到结论摘要和分析详情两份产物，再执行自动验收命令。
+8. 启用最终报告时，运行报告生成器得到结论摘要和分析详情两份产物，再执行自动验收命令。
 
 完整工作流和规范入口见：
 
@@ -118,7 +118,9 @@ python scripts/generate_final_report.py
 python scripts/generate_final_report.py --with-insights
 ```
 
-仅本地迭代某一份产物时，可使用 `--format md` 或 `--format html`；正式交付必须同时生成并绑定两份产物。
+使用前必须先把 `project.yaml` 的 `deliverables.insights` 设为 `true`；洞察只渲染在分析详情中，不进入结论摘要。
+
+仅本地迭代某一份产物时，可使用 `--format md` 或 `--format html`；正式交付必须同时生成并绑定两份产物。若项目显式设置 `deliverables.detail_report: false`，默认 `--format both` 只生成已启用的结论摘要，审计也只校验该产物。
 
 运行脚本前，先查看：
 
@@ -147,7 +149,15 @@ docs/script_catalog.md
 pytest -q
 ```
 
-`.github/workflows/ci.yml` 在每次提交和 PR 时执行 `ruff check .`、`pytest -q`、`python scripts/validate_project.py` 和 `python scripts/audit_project.py`。
+默认只跑非集成测试；依赖 Jupyter 内核的集成测试单独运行：
+
+```bash
+pytest -q -m integration
+```
+
+在受限沙箱或没有内核权限的环境中只跑前者即可。
+
+`.github/workflows/ci.yml` 在 Linux 和 Windows 上执行 `ruff check .`、`pytest -q`、`pytest -q -m integration`、`python scripts/validate_project.py` 和 `python scripts/audit_project.py`。CI 当前使用 Python 3.11；3.9 保持语法兼容，但未进入 CI 矩阵。
 
 `tests/` 中的框架自检测试只在模板仓库（`project.yaml` 的 `mode: template`）中运行，在具体业务项目副本中会自动跳过；业务项目应在同一目录下自行补充指标、清洗和数据校验测试。
 

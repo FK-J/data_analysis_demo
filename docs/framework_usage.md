@@ -37,7 +37,7 @@ python scripts/generate_final_report.py
 python scripts/audit_project.py
 ```
 
-报告渲染放在无界面运行之后，不在正在运行的 Notebook 内调用正式报告 CLI；Notebook 负责计算、检查和导出素材。默认同时生成 `final_analysis_report.md`（结论摘要）和 `analysis_detail.html`（分析详情）；无需最终报告时设置 `deliverables.final_report: false` 并跳过生成命令，不要只生成其中一份用于正式交付。
+报告渲染放在无界面运行之后，不在正在运行的 Notebook 内调用正式报告 CLI；Notebook 负责计算、检查和导出素材。默认同时生成 `final_analysis_report.md`（结论摘要）和 `analysis_detail.html`（分析详情）；无需最终报告时设置 `deliverables.final_report: false` 并跳过生成命令，不要只生成其中一份用于正式交付。只需结论摘要时设置 `deliverables.detail_report: false`，默认 `--format both` 会退化为只生成摘要，显式 `--format html` 会失败。
 
 ## 3. 项目契约
 
@@ -75,7 +75,7 @@ checks:
 
 ## 4. 阶段出口与自动化边界
 
-`workflow.yaml` 是可执行的阶段出口声明。`validate_project.py` 不带 `--stage` 仅做结构预检；带参数时检查该阶段及此前的出口，避免首次运行前就索要未来报告。
+`workflow.yaml` 是可执行的阶段出口声明。`validate_project.py` 不带 `--stage` 时做结构预检，并检查配置 Schema、契约 Schema、计划/摘要一致性；带参数时检查该阶段及此前出口，基础检查有失败时不会继续输出阶段证据，先修复基础失败。
 
 | 阶段 | 出口证据 | 用户负责 |
 | --- | --- | --- |
@@ -88,7 +88,7 @@ checks:
 | reported | 必需主题覆盖，结论摘要与分析详情均与本次运行绑定 | 样张和最终表达审阅 |
 | audited | 前述出口通过，交付物存在且可追溯 | 剩余限制及实际交付判断 |
 
-工程、分析、报告检查分别输出。`unverified` 和 `fail` 都阻止正式验收；`warn` 说明工具覆盖范围外的限制，例如没有 Git。模板模式只验收框架结构，不声称业务阶段通过。
+工程、数据、分析、报告检查分别输出。`unverified` 和 `fail` 都阻止正式验收；`warn` 说明工具覆盖范围外的限制，例如没有 Git。模板模式只验收框架结构，不声称业务阶段通过。
 
 ## 5. 报告覆盖和运行追溯
 

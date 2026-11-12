@@ -1,0 +1,35 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: Analysis runtime configuration
+type: object
+required: [project, analysis, paths]
+properties:
+  project:
+    type: object
+    required: [name, timezone, random_seed]
+    properties:
+      name:
+        type: string
+        pattern: '^[a-z][a-z0-9_]*$'
+      timezone:
+        type: string
+        minLength: 1
+      random_seed:
+        type: integer
+  analysis:
+    type: object
+    properties:
+      start_date:
+        type: [string, 'null']
+      end_date:
+        type: [string, 'null']
+      database_profile:
+        type: string
+        minLength: 1
+      readonly_sql:
+        type: boolean
+  paths:
+    type: object
+    minProperties: 1
+    additionalProperties:
+      type: string
+      minLength: 1

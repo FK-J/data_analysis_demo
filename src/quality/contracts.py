@@ -42,9 +42,9 @@ def run_table_checks(project_root: str | Path, rules: list[dict[str, Any]], *, c
             tolerance = rule.get("tolerance", 0)
             if kind == "unique":
                 keys = rule["keys"]
-                passed = not frame[keys].isna().any().any() and not frame.duplicated(keys).any()
+                passed = bool(len(frame)) and not frame[keys].isna().any().any() and not frame.duplicated(keys).any()
             elif kind == "non_null":
-                passed = not frame[rule["column"]].isna().any()
+                passed = bool(len(frame)) and not frame[rule["column"]].isna().any()
             elif kind in {"range", "row_count"}:
                 values = pd.Series([len(frame)]) if kind == "row_count" else pd.to_numeric(frame[rule["column"]], errors="raise")
                 passed = bool(len(values)) and bool(values.notna().all()) and bool(values.map(math.isfinite).all())
